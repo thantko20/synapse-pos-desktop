@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useNavigate } from "@tanstack/react-router"
-import { ArrowLeftIcon, PlusIcon, Trash2Icon } from "lucide-react"
-import { toast } from "sonner"
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { ArrowLeftIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { toast } from "sonner";
 
-import { Button } from "#/components/ui/button"
-import { Input } from "#/components/ui/input"
-import { Label } from "#/components/ui/label"
+import { Button } from "#/components/ui/button";
+import { Input } from "#/components/ui/input";
+import { Label } from "#/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -14,37 +14,37 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "#/components/ui/select"
-import { Textarea } from "#/components/ui/textarea"
-import { categoryQueries } from "#/features/category"
-import { productApi } from "../api"
-import { productQueries } from "../queries"
+} from "#/components/ui/select";
+import { Textarea } from "#/components/ui/textarea";
+import { categoryQueries } from "#/features/category";
+import { productApi } from "../api";
+import { productQueries } from "../queries";
 import type {
   CreateProductInput,
   CreateProductVariantInput,
   Product,
   UpdateProductInput,
   UpdateProductVariantInput,
-} from "../types"
+} from "../types";
 
 type VariantDraft = {
-  id?: string
-  name: string
-  sku: string
-  barcode: string
-  unitName: string
-  reorderPoint: number
-  alertThreshold: number
-}
+  id?: string;
+  name: string;
+  sku: string;
+  barcode: string;
+  unitName: string;
+  reorderPoint: number;
+  alertThreshold: number;
+};
 
 type ProductDraft = {
-  name: string
-  description: string
-  categoryId: string
-  brand: string
-  notes: string
-  variants: VariantDraft[]
-}
+  name: string;
+  description: string;
+  categoryId: string;
+  brand: string;
+  notes: string;
+  variants: VariantDraft[];
+};
 
 function createEmptyVariant(): VariantDraft {
   return {
@@ -54,7 +54,7 @@ function createEmptyVariant(): VariantDraft {
     unitName: "",
     reorderPoint: 0,
     alertThreshold: 0,
-  }
+  };
 }
 
 function createEmptyDraft(): ProductDraft {
@@ -65,7 +65,7 @@ function createEmptyDraft(): ProductDraft {
     brand: "",
     notes: "",
     variants: [createEmptyVariant()],
-  }
+  };
 }
 
 function mapProductToDraft(product: Product): ProductDraft {
@@ -86,7 +86,7 @@ function mapProductToDraft(product: Product): ProductDraft {
           alertThreshold: variant.alertThreshold,
         }))
       : [createEmptyVariant()],
-  }
+  };
 }
 
 function toCreatePayload(draft: ProductDraft): CreateProductInput {
@@ -104,10 +104,13 @@ function toCreatePayload(draft: ProductDraft): CreateProductInput {
       reorderPoint: variant.reorderPoint,
       alertThreshold: variant.alertThreshold,
     })),
-  }
+  };
 }
 
-function toUpdatePayload(productId: string, draft: ProductDraft): UpdateProductInput {
+function toUpdatePayload(
+  productId: string,
+  draft: ProductDraft
+): UpdateProductInput {
   return {
     id: productId,
     name: draft.name,
@@ -124,59 +127,60 @@ function toUpdatePayload(productId: string, draft: ProductDraft): UpdateProductI
       reorderPoint: variant.reorderPoint,
       alertThreshold: variant.alertThreshold,
     })),
-  }
+  };
 }
 
 interface ProductFormProps {
-  productId?: string
+  productId?: string;
 }
 
 export function ProductForm({ productId }: ProductFormProps) {
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const isEditing = !!productId
-  const [draft, setDraft] = useState<ProductDraft>(createEmptyDraft)
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const isEditing = !!productId;
+  const [draft, setDraft] = useState<ProductDraft>(createEmptyDraft);
 
   const { data: categoriesResult } = useQuery(
     categoryQueries.all({ pageSize: 100, includeArchived: false })
-  )
+  );
   const { data: product, isLoading } = useQuery({
     ...productQueries.detail(productId ?? ""),
     enabled: isEditing,
-  })
+  });
 
   useEffect(() => {
     if (product) {
-      setDraft(mapProductToDraft(product))
+      setDraft(mapProductToDraft(product));
     }
-  }, [product])
+  }, [product]);
 
   const createMutation = useMutation({
     mutationFn: productApi.createProduct,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["products"] })
-      toast.success("Product created")
-      navigate({ to: "/products" })
+      await queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Product created");
+      navigate({ to: "/products" });
     },
-    onError: () => {
-      toast.error("Failed to create product")
+    onError: (error) => {
+      console.log(error);
+      toast.error(error.message);
     },
-  })
+  });
 
   const updateMutation = useMutation({
     mutationFn: productApi.updateProduct,
     onSuccess: async (savedProduct) => {
-      await queryClient.invalidateQueries({ queryKey: ["products"] })
-      queryClient.setQueryData(["products", savedProduct.id], savedProduct)
-      toast.success("Product updated")
-      navigate({ to: "/products" })
+      await queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.setQueryData(["products", savedProduct.id], savedProduct);
+      toast.success("Product updated");
+      navigate({ to: "/products" });
     },
     onError: () => {
-      toast.error("Failed to update product")
+      toast.error("Failed to update product");
     },
-  })
+  });
 
-  const isPending = createMutation.isPending || updateMutation.isPending
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   function updateVariant(index: number, patch: Partial<VariantDraft>) {
     setDraft((current) => ({
@@ -184,22 +188,24 @@ export function ProductForm({ productId }: ProductFormProps) {
       variants: current.variants.map((variant, variantIndex) =>
         variantIndex === index ? { ...variant, ...patch } : variant
       ),
-    }))
+    }));
   }
 
   function handleSubmit(event: React.FormEvent) {
-    event.preventDefault()
+    event.preventDefault();
 
     if (isEditing && productId) {
-      updateMutation.mutate(toUpdatePayload(productId, draft))
-      return
+      updateMutation.mutate(toUpdatePayload(productId, draft));
+      return;
     }
 
-    createMutation.mutate(toCreatePayload(draft))
+    createMutation.mutate(toCreatePayload(draft));
   }
 
   if (isEditing && isLoading) {
-    return <div className="text-sm text-muted-foreground">Loading product...</div>
+    return (
+      <div className="text-sm text-muted-foreground">Loading product...</div>
+    );
   }
 
   return (
@@ -233,17 +239,28 @@ export function ProductForm({ productId }: ProductFormProps) {
             Cancel
           </Button>
           <Button type="submit" form="product-form" disabled={isPending}>
-            {isPending ? "Saving..." : isEditing ? "Update Product" : "Create Product"}
+            {isPending
+              ? "Saving..."
+              : isEditing
+                ? "Update Product"
+                : "Create Product"}
           </Button>
         </div>
       </div>
 
-      <form id="product-form" onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <form
+        id="product-form"
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-6"
+      >
         <section className="rounded-2xl border bg-card p-6 shadow-sm">
           <div className="mb-6 flex flex-col gap-1">
-            <h2 className="font-heading text-lg font-semibold">Product Details</h2>
+            <h2 className="font-heading text-lg font-semibold">
+              Product Details
+            </h2>
             <p className="text-sm text-muted-foreground">
-              Capture the core identity of the product before defining sellable variants.
+              Capture the core identity of the product before defining sellable
+              variants.
             </p>
           </div>
 
@@ -254,7 +271,10 @@ export function ProductForm({ productId }: ProductFormProps) {
                 id="product-name"
                 value={draft.name}
                 onChange={(event) =>
-                  setDraft((current) => ({ ...current, name: event.target.value }))
+                  setDraft((current) => ({
+                    ...current,
+                    name: event.target.value,
+                  }))
                 }
                 placeholder="Cold brew concentrate"
                 required
@@ -294,7 +314,10 @@ export function ProductForm({ productId }: ProductFormProps) {
                 id="product-brand"
                 value={draft.brand}
                 onChange={(event) =>
-                  setDraft((current) => ({ ...current, brand: event.target.value }))
+                  setDraft((current) => ({
+                    ...current,
+                    brand: event.target.value,
+                  }))
                 }
                 placeholder="Optional brand"
               />
@@ -322,7 +345,10 @@ export function ProductForm({ productId }: ProductFormProps) {
                 id="product-notes"
                 value={draft.notes}
                 onChange={(event) =>
-                  setDraft((current) => ({ ...current, notes: event.target.value }))
+                  setDraft((current) => ({
+                    ...current,
+                    notes: event.target.value,
+                  }))
                 }
                 placeholder="Internal notes for staff"
                 className="min-h-28"
@@ -336,7 +362,8 @@ export function ProductForm({ productId }: ProductFormProps) {
             <div className="space-y-1">
               <h2 className="font-heading text-lg font-semibold">Variants</h2>
               <p className="text-sm text-muted-foreground">
-                Every product needs at least one sellable variant. Use cards to keep complex entries readable.
+                Every product needs at least one sellable variant. Use cards to
+                keep complex entries readable.
               </p>
             </div>
             <Button
@@ -356,7 +383,10 @@ export function ProductForm({ productId }: ProductFormProps) {
 
           <div className="grid gap-4 xl:grid-cols-2">
             {draft.variants.map((variant, index) => (
-              <div key={variant.id ?? `new-${index}`} className="rounded-xl border bg-background p-4">
+              <div
+                key={variant.id ?? `new-${index}`}
+                className="rounded-xl border bg-background p-4"
+              >
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
                     <h3 className="font-medium">Variant {index + 1}</h3>
@@ -374,7 +404,9 @@ export function ProductForm({ productId }: ProductFormProps) {
                         variants:
                           current.variants.length === 1
                             ? current.variants
-                            : current.variants.filter((_, currentIndex) => currentIndex !== index),
+                            : current.variants.filter(
+                                (_, currentIndex) => currentIndex !== index
+                              ),
                       }))
                     }
                     disabled={draft.variants.length === 1}
@@ -386,11 +418,15 @@ export function ProductForm({ productId }: ProductFormProps) {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="flex flex-col gap-2 md:col-span-2">
-                    <Label htmlFor={`variant-name-${index}`}>Variant Name</Label>
+                    <Label htmlFor={`variant-name-${index}`}>
+                      Variant Name
+                    </Label>
                     <Input
                       id={`variant-name-${index}`}
                       value={variant.name}
-                      onChange={(event) => updateVariant(index, { name: event.target.value })}
+                      onChange={(event) =>
+                        updateVariant(index, { name: event.target.value })
+                      }
                       placeholder="Default, Large, Bottle, Box of 12"
                       required
                     />
@@ -401,7 +437,9 @@ export function ProductForm({ productId }: ProductFormProps) {
                     <Input
                       id={`variant-sku-${index}`}
                       value={variant.sku}
-                      onChange={(event) => updateVariant(index, { sku: event.target.value })}
+                      onChange={(event) =>
+                        updateVariant(index, { sku: event.target.value })
+                      }
                       placeholder="Optional unique SKU"
                     />
                   </div>
@@ -411,7 +449,9 @@ export function ProductForm({ productId }: ProductFormProps) {
                     <Input
                       id={`variant-barcode-${index}`}
                       value={variant.barcode}
-                      onChange={(event) => updateVariant(index, { barcode: event.target.value })}
+                      onChange={(event) =>
+                        updateVariant(index, { barcode: event.target.value })
+                      }
                       placeholder="Optional unique barcode"
                     />
                   </div>
@@ -421,13 +461,17 @@ export function ProductForm({ productId }: ProductFormProps) {
                     <Input
                       id={`variant-unit-${index}`}
                       value={variant.unitName}
-                      onChange={(event) => updateVariant(index, { unitName: event.target.value })}
+                      onChange={(event) =>
+                        updateVariant(index, { unitName: event.target.value })
+                      }
                       placeholder="piece, box, bottle"
                     />
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor={`variant-reorder-${index}`}>Reorder Point</Label>
+                    <Label htmlFor={`variant-reorder-${index}`}>
+                      Reorder Point
+                    </Label>
                     <Input
                       id={`variant-reorder-${index}`}
                       type="number"
@@ -443,7 +487,9 @@ export function ProductForm({ productId }: ProductFormProps) {
                   </div>
 
                   <div className="flex flex-col gap-2 md:col-span-2">
-                    <Label htmlFor={`variant-alert-${index}`}>Alert Threshold</Label>
+                    <Label htmlFor={`variant-alert-${index}`}>
+                      Alert Threshold
+                    </Label>
                     <Input
                       id={`variant-alert-${index}`}
                       type="number"
@@ -464,5 +510,5 @@ export function ProductForm({ productId }: ProductFormProps) {
         </section>
       </form>
     </div>
-  )
+  );
 }

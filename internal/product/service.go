@@ -2,6 +2,7 @@ package product
 
 import (
 	"context"
+	"log"
 	"strings"
 	"time"
 
@@ -68,6 +69,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, input CreateProductI
 
 	existing, err := s.repo.GetOneProduct(ctx, ProductFilter{Name: strings.TrimSpace(input.Name)})
 	if err != nil {
+		log.Printf("failed to called repo.GetOneProduct() %s\n", err)
 		return nil, err
 	}
 	if existing != nil {
