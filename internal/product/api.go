@@ -20,14 +20,22 @@ func (a *ProductApi) SetContext(ctx context.Context) {
 	a.ctx = ctx
 }
 
-func (a *ProductApi) GetAllProducts(input GetProductsInput) ([]Product, error) {
+func (a *ProductApi) GetAllProducts(input GetProductsInput) (*GetProductsResult, error) {
 	return a.svc.GetAllProducts(a.ctx, input)
 }
 
-func (a *ProductApi) GetProductById(id string) (*Product, error) {
-	return a.svc.GetProductById(a.ctx, id)
+func (a *ProductApi) GetProductById(input GetProductByIdInput) (*Product, error) {
+	return a.svc.GetProductById(a.ctx, input.ID)
 }
 
 func (a *ProductApi) CreateProduct(input CreateProductInput) (*Product, error) {
 	return a.svc.CreateProduct(a.ctx, input)
+}
+
+func (a *ProductApi) UpdateProduct(input UpdateProductInput) (*Product, error) {
+	return a.svc.UpdateProduct(a.ctx, input)
+}
+
+func (a *ProductApi) ArchiveProduct(input GetProductByIdInput) error {
+	return a.svc.ArchiveProduct(a.ctx, input.ID)
 }

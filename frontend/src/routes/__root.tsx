@@ -1,6 +1,6 @@
-import { Link, Outlet, createRootRoute } from "@tanstack/react-router"
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
-import { TanStackDevtools } from "@tanstack/react-devtools"
+import { Link, Outlet, createRootRoute } from "@tanstack/react-router";
+import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { TanStackDevtools } from "@tanstack/react-devtools";
 import {
   Sidebar,
   SidebarContent,
@@ -14,26 +14,29 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-} from "#/components/ui/sidebar"
-import { Separator } from "#/components/ui/separator"
-import { LayoutGridIcon, PackageIcon } from "lucide-react"
+} from "#/components/ui/sidebar";
+import { Separator } from "#/components/ui/separator";
+import { BoxesIcon, LayoutGridIcon, PackageIcon } from "lucide-react";
 
-import "../styles.css"
+import "../styles.css";
 
 const navItems = [
   { title: "Dashboard", href: "/", icon: LayoutGridIcon },
   { title: "Categories", href: "/categories", icon: PackageIcon },
-]
+  { title: "Products", href: "/products", icon: BoxesIcon },
+];
 
 export const Route = createRootRoute({
   component: RootComponent,
-})
+});
 
 function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="px-2 py-1 font-heading text-lg font-bold">Synapse POS</div>
+        <div className="px-2 py-1 font-heading text-lg font-bold">
+          Synapse POS
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -42,12 +45,14 @@ function AppSidebar() {
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild>
-                    <Link to={item.href}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
+                  <SidebarMenuButton
+                    render={({ className }) => (
+                      <Link className={className} to={item.href}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    )}
+                  ></SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -55,7 +60,7 @@ function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
-  )
+  );
 }
 
 function RootComponent() {
@@ -81,5 +86,5 @@ function RootComponent() {
         ]}
       />
     </SidebarProvider>
-  )
+  );
 }

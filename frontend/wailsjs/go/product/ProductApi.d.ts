@@ -3,10 +3,14 @@
 import {product} from '../models';
 import {context} from '../models';
 
+export function ArchiveProduct(arg1:product.GetProductByIdInput):Promise<void>;
+
 export function CreateProduct(arg1:product.CreateProductInput):Promise<product.Product>;
 
-export function GetAllProducts(arg1:product.GetProductsInput):Promise<Array<product.Product>>;
+export function GetAllProducts(arg1:product.GetProductsInput):Promise<product.GetProductsResult>;
 
-export function GetProductById(arg1:string):Promise<product.Product>;
+export function GetProductById(arg1:product.GetProductByIdInput):Promise<product.Product>;
 
 export function SetContext(arg1:context.Context):Promise<void>;
+
+export function UpdateProduct(arg1:product.UpdateProductInput):Promise<product.Product>;

@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS product (
     name TEXT NOT NULL,
     description TEXT NOT NULL DEFAULT '',
     category_id TEXT,
+    brand TEXT NOT NULL DEFAULT '',
+    notes TEXT NOT NULL DEFAULT '',
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
