@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   flexRender,
   getCoreRowModel,
@@ -11,17 +11,17 @@ import {
   useReactTable,
   type SortingState,
   type ColumnFiltersState,
-} from "@tanstack/react-table"
-import { categoryQueries } from "../queries"
-import { categoryApi } from "../api"
-import type { Category } from "../types"
-import { getCategoryColumns } from "../columns"
-import { CategoryFormDialog } from "./category-form-dialog"
-import { ArchiveDialog } from "./archive-dialog"
-import { toast } from "sonner"
+} from "@tanstack/react-table";
+import { categoryQueries } from "../queries";
+import { categoryApi } from "../api";
+import type { Category } from "../types";
+import { getCategoryColumns } from "../columns";
+import { CategoryFormDialog } from "./category-form-dialog";
+import { ArchiveDialog } from "./archive-dialog";
+import { toast } from "sonner";
 
-import { Button } from "#/components/ui/button"
-import { Input } from "#/components/ui/input"
+import { Button } from "#/components/ui/button";
+import { Input } from "#/components/ui/input";
 import {
   Table,
   TableBody,
@@ -29,79 +29,79 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "#/components/ui/table"
-import { PlusIcon, SearchIcon } from "lucide-react"
+} from "#/components/ui/table";
+import { PlusIcon, SearchIcon } from "lucide-react";
 
 export function CategoryList() {
-  const queryClient = useQueryClient()
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [showArchived, setShowArchived] = useState(false)
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [editCategory, setEditCategory] = useState<Category | null>(null)
-  const [archiveCategory, setArchiveCategory] = useState<Category | null>(null)
+  const queryClient = useQueryClient();
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [showArchived, setShowArchived] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editCategory, setEditCategory] = useState<Category | null>(null);
+  const [archiveCategory, setArchiveCategory] = useState<Category | null>(null);
 
   const { data: result, isLoading } = useQuery(
     categoryQueries.all({ includeArchived: showArchived })
-  )
+  );
 
   const createMutation = useMutation({
     mutationFn: categoryApi.createCategory,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] })
-      toast.success("Category created")
-      setCreateDialogOpen(false)
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      toast.success("Category created");
+      setCreateDialogOpen(false);
     },
     onError: () => {
-      toast.error("Failed to create category")
+      toast.error("Failed to create category");
     },
-  })
+  });
 
   const updateMutation = useMutation({
     mutationFn: categoryApi.updateCategory,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] })
-      toast.success("Category updated")
-      setEditCategory(null)
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      toast.success("Category updated");
+      setEditCategory(null);
     },
     onError: () => {
-      toast.error("Failed to update category")
+      toast.error("Failed to update category");
     },
-  })
+  });
 
   const archiveMutation = useMutation({
     mutationFn: categoryApi.archiveCategory,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] })
-      toast.success("Category archived")
-      setArchiveCategory(null)
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      toast.success("Category archived");
+      setArchiveCategory(null);
     },
     onError: () => {
-      toast.error("Failed to archive category")
+      toast.error("Failed to archive category");
     },
-  })
+  });
 
-  const columns = getCategoryColumns({
-    onEdit: (category) => setEditCategory(category),
-    onArchive: (category) => setArchiveCategory(category),
-  })
+  const columns = useMemo(
+    () =>
+      getCategoryColumns({
+        onEdit: (category) => setEditCategory(category),
+        onArchive: (category) => setArchiveCategory(category),
+      }),
+    []
+  );
 
-  const categories = result?.items ?? []
+  const categories = result?.items ?? [];
 
   const table = useReactTable({
     data: categories,
     columns,
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     state: {
       sorting,
-      columnFilters,
     },
-  })
+  });
 
   return (
     <div className="flex flex-col gap-4">
@@ -128,14 +128,16 @@ export function CategoryList() {
         <Button
           variant={showArchived ? "secondary" : "outline"}
           size="sm"
-          onClick={() => setShowArchived(!showArchived)}
+          onClick={() => setShowArchived((prev) => !prev)}
         >
           {showArchived ? "Hide archived" : "Show archived"}
         </Button>
       </div>
 
       {isLoading ? (
-        <div className="text-sm text-muted-foreground">Loading categories...</div>
+        <div className="text-sm text-muted-foreground">
+          Loading categories...
+        </div>
       ) : (
         <div className="overflow-hidden rounded-md border">
           <Table>
@@ -146,7 +148,10 @@ export function CategoryList() {
                     <TableHead key={header.id}>
                       {header.isPlaceholder
                         ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -158,14 +163,20 @@ export function CategoryList() {
                   <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
                       </TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
                     No categories found.
                   </TableCell>
                 </TableRow>
@@ -222,5 +233,5 @@ export function CategoryList() {
         />
       )}
     </div>
-  )
+  );
 }

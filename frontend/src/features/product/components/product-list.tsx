@@ -92,10 +92,18 @@ export function ProductList() {
             Manage products and their sellable variants in one place.
           </p>
         </div>
-        <Link className={""} to="/products/new">
+        <Button
+          render={({ className, children }) => (
+            <Link
+              to="/products/new"
+              className={className}
+              children={children}
+            />
+          )}
+        >
           <PlusIcon data-icon="inline-start" />
           New Product
-        </Link>
+        </Button>
       </div>
 
       <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">

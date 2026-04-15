@@ -13,7 +13,7 @@ import { Route as ProductsRouteImport } from './routes/products'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ProductsNewRouteImport } from './routes/products.new'
+import { Route as ProductsNewRouteImport } from './routes/products_.new'
 import { Route as ProductsIdEditRouteImport } from './routes/products.$id.edit'
 
 const ProductsRoute = ProductsRouteImport.update({
@@ -37,9 +37,9 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductsNewRoute = ProductsNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => ProductsRoute,
+  id: '/products_/new',
+  path: '/products/new',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ProductsIdEditRoute = ProductsIdEditRouteImport.update({
   id: '/$id/edit',
@@ -69,7 +69,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/categories': typeof CategoriesRoute
   '/products': typeof ProductsRouteWithChildren
-  '/products/new': typeof ProductsNewRoute
+  '/products_/new': typeof ProductsNewRoute
   '/products/$id/edit': typeof ProductsIdEditRoute
 }
 export interface FileRouteTypes {
@@ -95,7 +95,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/categories'
     | '/products'
-    | '/products/new'
+    | '/products_/new'
     | '/products/$id/edit'
   fileRoutesById: FileRoutesById
 }
@@ -104,6 +104,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   CategoriesRoute: typeof CategoriesRoute
   ProductsRoute: typeof ProductsRouteWithChildren
+  ProductsNewRoute: typeof ProductsNewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -136,12 +137,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/products/new': {
-      id: '/products/new'
-      path: '/new'
+    '/products_/new': {
+      id: '/products_/new'
+      path: '/products/new'
       fullPath: '/products/new'
       preLoaderRoute: typeof ProductsNewRouteImport
-      parentRoute: typeof ProductsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/products/$id/edit': {
       id: '/products/$id/edit'
@@ -154,12 +155,10 @@ declare module '@tanstack/react-router' {
 }
 
 interface ProductsRouteChildren {
-  ProductsNewRoute: typeof ProductsNewRoute
   ProductsIdEditRoute: typeof ProductsIdEditRoute
 }
 
 const ProductsRouteChildren: ProductsRouteChildren = {
-  ProductsNewRoute: ProductsNewRoute,
   ProductsIdEditRoute: ProductsIdEditRoute,
 }
 
@@ -172,6 +171,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   CategoriesRoute: CategoriesRoute,
   ProductsRoute: ProductsRouteWithChildren,
+  ProductsNewRoute: ProductsNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
