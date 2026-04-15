@@ -1,0 +1,14 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "Synapse POS",
+  "build:tags": "webkit2_41",
+  "outputfilename": "synapse-pos",
+  "frontend:install": "pnpm install",
+  "frontend:build": "pnpm build",
+  "frontend:dev:watcher": "pnpm dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "Thant Ko Zaw",
+    "email": "thantmkou10@gmail.com"
+  }
+}
