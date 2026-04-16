@@ -5,12 +5,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   type SortingState,
-  type ColumnFiltersState,
 } from "@tanstack/react-table";
 import { categoryQueries } from "../queries";
 import { categoryApi } from "../api";
@@ -35,7 +32,6 @@ import { PlusIcon, SearchIcon } from "lucide-react";
 export function CategoryList() {
   const queryClient = useQueryClient();
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [showArchived, setShowArchived] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editCategory, setEditCategory] = useState<Category | null>(null);

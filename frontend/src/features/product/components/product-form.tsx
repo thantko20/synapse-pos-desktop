@@ -1,12 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeftIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "#/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "#/components/ui/field";
 import { Input } from "#/components/ui/input";
-import { Label } from "#/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -19,35 +25,18 @@ import { Textarea } from "#/components/ui/textarea";
 import { categoryQueries } from "#/features/category";
 import { productApi } from "../api";
 import { productQueries } from "../queries";
-import type {
+import { ProductFormSchema } from "../schemas";
+import {
   CreateProductInput,
-  CreateProductVariantInput,
-  Product,
   UpdateProductInput,
-  UpdateProductVariantInput,
+  type CreateProductVariantInput,
+  type Product,
+  type UpdateProductVariantInput,
 } from "../types";
 
-type VariantDraft = {
-  id?: string;
-  name: string;
-  sku: string;
-  barcode: string;
-  unitName: string;
-  reorderPoint: number;
-  alertThreshold: number;
-};
-
-type ProductDraft = {
-  name: string;
-  description: string;
-  categoryId: string;
-  brand: string;
-  notes: string;
-  variants: VariantDraft[];
-};
-
-function createEmptyVariant(): VariantDraft {
+function createEmptyVariant() {
   return {
+    id: "",
     name: "",
     sku: "",
     barcode: "",
@@ -57,76 +46,24 @@ function createEmptyVariant(): VariantDraft {
   };
 }
 
-function createEmptyDraft(): ProductDraft {
+function createDefaults(product?: Product) {
   return {
-    name: "",
-    description: "",
-    categoryId: "",
-    brand: "",
-    notes: "",
-    variants: [createEmptyVariant()],
-  };
-}
-
-function mapProductToDraft(product: Product): ProductDraft {
-  return {
-    name: product.name,
-    description: product.description,
-    categoryId: product.categoryId,
-    brand: product.brand,
-    notes: product.notes,
-    variants: product.variants?.length
-      ? product.variants.map((variant) => ({
-          id: variant.id,
-          name: variant.name,
-          sku: variant.sku,
-          barcode: variant.barcode,
-          unitName: variant.unitName,
-          reorderPoint: variant.reorderPoint,
-          alertThreshold: variant.alertThreshold,
+    name: product?.name ?? "",
+    description: product?.description ?? "",
+    categoryId: product?.categoryId ?? "",
+    brand: product?.brand ?? "",
+    notes: product?.notes ?? "",
+    variants: product?.variants?.length
+      ? product.variants.map((v) => ({
+          id: v.id,
+          name: v.name,
+          sku: v.sku,
+          barcode: v.barcode,
+          unitName: v.unitName,
+          reorderPoint: v.reorderPoint,
+          alertThreshold: v.alertThreshold,
         }))
       : [createEmptyVariant()],
-  };
-}
-
-function toCreatePayload(draft: ProductDraft): CreateProductInput {
-  return {
-    name: draft.name,
-    description: draft.description,
-    categoryId: draft.categoryId,
-    brand: draft.brand,
-    notes: draft.notes,
-    variants: draft.variants.map<CreateProductVariantInput>((variant) => ({
-      name: variant.name,
-      sku: variant.sku,
-      barcode: variant.barcode,
-      unitName: variant.unitName,
-      reorderPoint: variant.reorderPoint,
-      alertThreshold: variant.alertThreshold,
-    })),
-  };
-}
-
-function toUpdatePayload(
-  productId: string,
-  draft: ProductDraft
-): UpdateProductInput {
-  return {
-    id: productId,
-    name: draft.name,
-    description: draft.description,
-    categoryId: draft.categoryId,
-    brand: draft.brand,
-    notes: draft.notes,
-    variants: draft.variants.map<UpdateProductVariantInput>((variant) => ({
-      id: variant.id ?? "",
-      name: variant.name,
-      sku: variant.sku,
-      barcode: variant.barcode,
-      unitName: variant.unitName,
-      reorderPoint: variant.reorderPoint,
-      alertThreshold: variant.alertThreshold,
-    })),
   };
 }
 
@@ -138,7 +75,6 @@ export function ProductForm({ productId }: ProductFormProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isEditing = !!productId;
-  const [draft, setDraft] = useState<ProductDraft>(createEmptyDraft);
 
   const { data: categoriesResult } = useQuery(
     categoryQueries.all({ pageSize: 100, includeArchived: false })
@@ -148,9 +84,58 @@ export function ProductForm({ productId }: ProductFormProps) {
     enabled: isEditing,
   });
 
+  const form = useForm({
+    defaultValues: createDefaults(),
+    validators: {
+      onSubmit: ProductFormSchema,
+    },
+    onSubmit: ({ value }) => {
+      if (isEditing && productId) {
+        updateMutation.mutate(
+          new UpdateProductInput({
+            id: productId,
+            name: value.name,
+            description: value.description,
+            categoryId: value.categoryId,
+            brand: value.brand,
+            notes: value.notes,
+            variants: value.variants.map<UpdateProductVariantInput>((v) => ({
+              id: v.id,
+              name: v.name,
+              sku: v.sku,
+              barcode: v.barcode,
+              unitName: v.unitName,
+              reorderPoint: v.reorderPoint,
+              alertThreshold: v.alertThreshold,
+            })),
+          })
+        );
+        return;
+      }
+
+      createMutation.mutate(
+        new CreateProductInput({
+          name: value.name,
+          description: value.description,
+          categoryId: value.categoryId,
+          brand: value.brand,
+          notes: value.notes,
+          variants: value.variants.map<CreateProductVariantInput>((v) => ({
+            name: v.name,
+            sku: v.sku,
+            barcode: v.barcode,
+            unitName: v.unitName,
+            reorderPoint: v.reorderPoint,
+            alertThreshold: v.alertThreshold,
+          })),
+        })
+      );
+    },
+  });
+
   useEffect(() => {
     if (product) {
-      setDraft(mapProductToDraft(product));
+      form.reset(createDefaults(product));
     }
   }, [product]);
 
@@ -162,7 +147,6 @@ export function ProductForm({ productId }: ProductFormProps) {
       navigate({ to: "/products" });
     },
     onError: (error) => {
-      console.log(error);
       toast.error(error.message);
     },
   });
@@ -181,26 +165,6 @@ export function ProductForm({ productId }: ProductFormProps) {
   });
 
   const isPending = createMutation.isPending || updateMutation.isPending;
-
-  function updateVariant(index: number, patch: Partial<VariantDraft>) {
-    setDraft((current) => ({
-      ...current,
-      variants: current.variants.map((variant, variantIndex) =>
-        variantIndex === index ? { ...variant, ...patch } : variant
-      ),
-    }));
-  }
-
-  function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-
-    if (isEditing && productId) {
-      updateMutation.mutate(toUpdatePayload(productId, draft));
-      return;
-    }
-
-    createMutation.mutate(toCreatePayload(draft));
-  }
 
   if (isEditing && isLoading) {
     return (
@@ -250,7 +214,10 @@ export function ProductForm({ productId }: ProductFormProps) {
 
       <form
         id="product-form"
-        onSubmit={handleSubmit}
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
         className="flex flex-col gap-6"
       >
         <section className="rounded-2xl border bg-card p-6 shadow-sm">
@@ -264,97 +231,146 @@ export function ProductForm({ productId }: ProductFormProps) {
             </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <Label htmlFor="product-name">Name</Label>
-              <Input
-                id="product-name"
-                value={draft.name}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    name: event.target.value,
-                  }))
-                }
-                placeholder="Cold brew concentrate"
-                required
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="product-category">Category</Label>
-              <Select
-                value={draft.categoryId}
-                onValueChange={(value) =>
-                  setDraft((current) => ({
-                    ...current,
-                    categoryId: value,
-                  }))
-                }
-              >
-                <SelectTrigger id="product-category" className="w-full">
-                  <SelectValue placeholder="Uncategorized" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="">Uncategorized</SelectItem>
-                    {(categoriesResult?.items ?? []).map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="product-brand">Brand</Label>
-              <Input
-                id="product-brand"
-                value={draft.brand}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    brand: event.target.value,
-                  }))
-                }
-                placeholder="Optional brand"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <Label htmlFor="product-description">Description</Label>
-              <Textarea
-                id="product-description"
-                value={draft.description}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    description: event.target.value,
-                  }))
-                }
-                placeholder="Customer-facing description"
-                className="min-h-28"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <Label htmlFor="product-notes">Notes</Label>
-              <Textarea
-                id="product-notes"
-                value={draft.notes}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    notes: event.target.value,
-                  }))
-                }
-                placeholder="Internal notes for staff"
-                className="min-h-28"
-              />
-            </div>
-          </div>
+          <FieldGroup>
+            <form.Field
+              name="name"
+              children={(field) => {
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid} className="md:col-span-2">
+                    <FieldLabel htmlFor="product-name">Name</FieldLabel>
+                    <Input
+                      id="product-name"
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={isInvalid}
+                      placeholder="Cold brew concentrate"
+                    />
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
+                  </Field>
+                );
+              }}
+            />
+            <form.Field
+              name="categoryId"
+              children={(field) => {
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor="product-category">Category</FieldLabel>
+                    <Select
+                      name={field.name}
+                      value={field.state.value}
+                      onValueChange={(value) => field.handleChange(value ?? "")}
+                    >
+                      <SelectTrigger
+                        id="product-category"
+                        className="w-full"
+                        aria-invalid={isInvalid}
+                      >
+                        <SelectValue placeholder="Uncategorized" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="">Uncategorized</SelectItem>
+                          {(categoriesResult?.items ?? []).map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
+                  </Field>
+                );
+              }}
+            />
+            <form.Field
+              name="brand"
+              children={(field) => {
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor="product-brand">Brand</FieldLabel>
+                    <Input
+                      id="product-brand"
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={isInvalid}
+                      placeholder="Optional brand"
+                    />
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
+                  </Field>
+                );
+              }}
+            />
+            <form.Field
+              name="description"
+              children={(field) => {
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid} className="md:col-span-2">
+                    <FieldLabel htmlFor="product-description">
+                      Description
+                    </FieldLabel>
+                    <Textarea
+                      id="product-description"
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={isInvalid}
+                      placeholder="Customer-facing description"
+                      className="min-h-28"
+                    />
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
+                  </Field>
+                );
+              }}
+            />
+            <form.Field
+              name="notes"
+              children={(field) => {
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid} className="md:col-span-2">
+                    <FieldLabel htmlFor="product-notes">Notes</FieldLabel>
+                    <Textarea
+                      id="product-notes"
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={isInvalid}
+                      placeholder="Internal notes for staff"
+                      className="min-h-28"
+                    />
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
+                  </Field>
+                );
+              }}
+            />
+          </FieldGroup>
         </section>
 
         <section className="rounded-2xl border bg-card p-6 shadow-sm">
@@ -362,18 +378,14 @@ export function ProductForm({ productId }: ProductFormProps) {
             <div className="space-y-1">
               <h2 className="font-heading text-lg font-semibold">Variants</h2>
               <p className="text-sm text-muted-foreground">
-                Every product needs at least one sellable variant. Use cards to
-                keep complex entries readable.
+                Every product needs at least one sellable variant.
               </p>
             </div>
             <Button
               type="button"
               variant="outline"
               onClick={() =>
-                setDraft((current) => ({
-                  ...current,
-                  variants: [...current.variants, createEmptyVariant()],
-                }))
+                form.pushFieldValue("variants", createEmptyVariant())
               }
             >
               <PlusIcon data-icon="inline-start" />
@@ -381,132 +393,230 @@ export function ProductForm({ productId }: ProductFormProps) {
             </Button>
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-2">
-            {draft.variants.map((variant, index) => (
-              <div
-                key={variant.id ?? `new-${index}`}
-                className="rounded-xl border bg-background p-4"
-              >
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div>
-                    <h3 className="font-medium">Variant {index + 1}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      Identifiers and thresholds for one sellable option.
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() =>
-                      setDraft((current) => ({
-                        ...current,
-                        variants:
-                          current.variants.length === 1
-                            ? current.variants
-                            : current.variants.filter(
-                                (_, currentIndex) => currentIndex !== index
-                              ),
-                      }))
-                    }
-                    disabled={draft.variants.length === 1}
+          <form.Field
+            name="variants"
+            mode="array"
+            children={(variantsField) => (
+              <div className="grid gap-4 xl:grid-cols-2">
+                {variantsField.state.value.map((_, index) => (
+                  <div
+                    key={index}
+                    className="rounded-xl border bg-background p-4"
                   >
-                    <Trash2Icon />
-                    <span className="sr-only">Remove variant</span>
-                  </Button>
-                </div>
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="font-medium">Variant {index + 1}</h3>
+                        <p className="text-xs text-muted-foreground">
+                          Identifiers and thresholds for one sellable option.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => variantsField.removeValue(index)}
+                        disabled={variantsField.state.value.length === 1}
+                      >
+                        <Trash2Icon />
+                        <span className="sr-only">Remove variant</span>
+                      </Button>
+                    </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="flex flex-col gap-2 md:col-span-2">
-                    <Label htmlFor={`variant-name-${index}`}>
-                      Variant Name
-                    </Label>
-                    <Input
-                      id={`variant-name-${index}`}
-                      value={variant.name}
-                      onChange={(event) =>
-                        updateVariant(index, { name: event.target.value })
-                      }
-                      placeholder="Default, Large, Bottle, Box of 12"
-                      required
-                    />
+                    <FieldGroup>
+                      <form.Field
+                        name={`variants[${index}].name`}
+                        children={(field) => {
+                          const isInvalid =
+                            field.state.meta.isTouched &&
+                            !field.state.meta.isValid;
+                          return (
+                            <Field
+                              data-invalid={isInvalid}
+                              className="md:col-span-2"
+                            >
+                              <FieldLabel htmlFor={`variant-name-${index}`}>
+                                Variant Name
+                              </FieldLabel>
+                              <Input
+                                id={`variant-name-${index}`}
+                                name={field.name}
+                                value={field.state.value}
+                                onBlur={field.handleBlur}
+                                onChange={(e) =>
+                                  field.handleChange(e.target.value)
+                                }
+                                aria-invalid={isInvalid}
+                                placeholder="Default, Large, Bottle, Box of 12"
+                              />
+                              {isInvalid && (
+                                <FieldError errors={field.state.meta.errors} />
+                              )}
+                            </Field>
+                          );
+                        }}
+                      />
+                      <form.Field
+                        name={`variants[${index}].sku`}
+                        children={(field) => {
+                          const isInvalid =
+                            field.state.meta.isTouched &&
+                            !field.state.meta.isValid;
+                          return (
+                            <Field data-invalid={isInvalid}>
+                              <FieldLabel htmlFor={`variant-sku-${index}`}>
+                                SKU
+                              </FieldLabel>
+                              <Input
+                                id={`variant-sku-${index}`}
+                                name={field.name}
+                                value={field.state.value}
+                                onBlur={field.handleBlur}
+                                onChange={(e) =>
+                                  field.handleChange(e.target.value)
+                                }
+                                aria-invalid={isInvalid}
+                                placeholder="Optional unique SKU"
+                              />
+                              {isInvalid && (
+                                <FieldError errors={field.state.meta.errors} />
+                              )}
+                            </Field>
+                          );
+                        }}
+                      />
+                      <form.Field
+                        name={`variants[${index}].barcode`}
+                        children={(field) => {
+                          const isInvalid =
+                            field.state.meta.isTouched &&
+                            !field.state.meta.isValid;
+                          return (
+                            <Field data-invalid={isInvalid}>
+                              <FieldLabel htmlFor={`variant-barcode-${index}`}>
+                                Barcode
+                              </FieldLabel>
+                              <Input
+                                id={`variant-barcode-${index}`}
+                                name={field.name}
+                                value={field.state.value}
+                                onBlur={field.handleBlur}
+                                onChange={(e) =>
+                                  field.handleChange(e.target.value)
+                                }
+                                aria-invalid={isInvalid}
+                                placeholder="Optional unique barcode"
+                              />
+                              {isInvalid && (
+                                <FieldError errors={field.state.meta.errors} />
+                              )}
+                            </Field>
+                          );
+                        }}
+                      />
+                      <form.Field
+                        name={`variants[${index}].unitName`}
+                        children={(field) => {
+                          const isInvalid =
+                            field.state.meta.isTouched &&
+                            !field.state.meta.isValid;
+                          return (
+                            <Field data-invalid={isInvalid}>
+                              <FieldLabel htmlFor={`variant-unit-${index}`}>
+                                Unit Name
+                              </FieldLabel>
+                              <Input
+                                id={`variant-unit-${index}`}
+                                name={field.name}
+                                value={field.state.value}
+                                onBlur={field.handleBlur}
+                                onChange={(e) =>
+                                  field.handleChange(e.target.value)
+                                }
+                                aria-invalid={isInvalid}
+                                placeholder="piece, box, bottle"
+                              />
+                              {isInvalid && (
+                                <FieldError errors={field.state.meta.errors} />
+                              )}
+                            </Field>
+                          );
+                        }}
+                      />
+                      <form.Field
+                        name={`variants[${index}].reorderPoint`}
+                        children={(field) => {
+                          const isInvalid =
+                            field.state.meta.isTouched &&
+                            !field.state.meta.isValid;
+                          return (
+                            <Field data-invalid={isInvalid}>
+                              <FieldLabel htmlFor={`variant-reorder-${index}`}>
+                                Reorder Point
+                              </FieldLabel>
+                              <Input
+                                id={`variant-reorder-${index}`}
+                                type="number"
+                                min={0}
+                                name={field.name}
+                                value={field.state.value || ""}
+                                onBlur={field.handleBlur}
+                                onChange={(e) =>
+                                  field.handleChange(
+                                    Number(e.target.value || 0)
+                                  )
+                                }
+                                aria-invalid={isInvalid}
+                                placeholder="Optional"
+                              />
+                              {isInvalid && (
+                                <FieldError errors={field.state.meta.errors} />
+                              )}
+                            </Field>
+                          );
+                        }}
+                      />
+                      <form.Field
+                        name={`variants[${index}].alertThreshold`}
+                        children={(field) => {
+                          const isInvalid =
+                            field.state.meta.isTouched &&
+                            !field.state.meta.isValid;
+                          return (
+                            <Field
+                              data-invalid={isInvalid}
+                              className="md:col-span-2"
+                            >
+                              <FieldLabel htmlFor={`variant-alert-${index}`}>
+                                Alert Threshold
+                              </FieldLabel>
+                              <Input
+                                id={`variant-alert-${index}`}
+                                type="number"
+                                min={0}
+                                name={field.name}
+                                value={field.state.value || ""}
+                                onBlur={field.handleBlur}
+                                onChange={(e) =>
+                                  field.handleChange(
+                                    Number(e.target.value || 0)
+                                  )
+                                }
+                                aria-invalid={isInvalid}
+                                placeholder="Optional"
+                              />
+                              {isInvalid && (
+                                <FieldError errors={field.state.meta.errors} />
+                              )}
+                            </Field>
+                          );
+                        }}
+                      />
+                    </FieldGroup>
                   </div>
-
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor={`variant-sku-${index}`}>SKU</Label>
-                    <Input
-                      id={`variant-sku-${index}`}
-                      value={variant.sku}
-                      onChange={(event) =>
-                        updateVariant(index, { sku: event.target.value })
-                      }
-                      placeholder="Optional unique SKU"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor={`variant-barcode-${index}`}>Barcode</Label>
-                    <Input
-                      id={`variant-barcode-${index}`}
-                      value={variant.barcode}
-                      onChange={(event) =>
-                        updateVariant(index, { barcode: event.target.value })
-                      }
-                      placeholder="Optional unique barcode"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor={`variant-unit-${index}`}>Unit Name</Label>
-                    <Input
-                      id={`variant-unit-${index}`}
-                      value={variant.unitName}
-                      onChange={(event) =>
-                        updateVariant(index, { unitName: event.target.value })
-                      }
-                      placeholder="piece, box, bottle"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor={`variant-reorder-${index}`}>
-                      Reorder Point
-                    </Label>
-                    <Input
-                      id={`variant-reorder-${index}`}
-                      type="number"
-                      min={0}
-                      value={variant.reorderPoint || ""}
-                      onChange={(event) =>
-                        updateVariant(index, {
-                          reorderPoint: Number(event.target.value || 0),
-                        })
-                      }
-                      placeholder="Optional"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-2 md:col-span-2">
-                    <Label htmlFor={`variant-alert-${index}`}>
-                      Alert Threshold
-                    </Label>
-                    <Input
-                      id={`variant-alert-${index}`}
-                      type="number"
-                      min={0}
-                      value={variant.alertThreshold || ""}
-                      onChange={(event) =>
-                        updateVariant(index, {
-                          alertThreshold: Number(event.target.value || 0),
-                        })
-                      }
-                      placeholder="Optional"
-                    />
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+          />
         </section>
       </form>
     </div>

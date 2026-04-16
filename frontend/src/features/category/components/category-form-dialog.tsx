@@ -1,6 +1,7 @@
-import { DropdownMenuGroup, DropdownMenuLabel } from "#/components/ui/dropdown-menu"
-import { Input } from "#/components/ui/input"
-import { Label } from "#/components/ui/label"
+import { useEffect } from "react"
+import { useForm } from "@tanstack/react-form"
+
+import { Button } from "#/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -9,9 +10,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog"
-import { Button } from "#/components/ui/button"
-import { useState, useEffect } from "react"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "#/components/ui/field"
+import { Input } from "#/components/ui/input"
 import type { Category } from "../types"
+import { CategoryFormSchema } from "../schemas"
 
 interface CategoryFormDialogProps {
   open: boolean
@@ -28,22 +35,29 @@ export function CategoryFormDialog({
   onSubmit,
   isPending,
 }: CategoryFormDialogProps) {
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
+  const isEditing = !!category
+
+  const form = useForm({
+    defaultValues: {
+      name: "",
+      description: "",
+    },
+    validators: {
+      onSubmit: CategoryFormSchema,
+    },
+    onSubmit: ({ value }) => {
+      onSubmit(value)
+    },
+  })
 
   useEffect(() => {
     if (open) {
-      setName(category?.name ?? "")
-      setDescription(category?.description ?? "")
+      form.reset({
+        name: category?.name ?? "",
+        description: category?.description ?? "",
+      })
     }
   }, [open, category])
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit({ name, description })
-  }
-
-  const isEditing = !!category
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -51,40 +65,70 @@ export function CategoryFormDialog({
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Category" : "New Category"}</DialogTitle>
           <DialogDescription>
-            {isEditing
-              ? "Update the category details."
-              : "Create a new category."}
+            {isEditing ? "Update the category details." : "Create a new category."}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="category-name">Name</Label>
-            <Input
-              id="category-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Category name"
-              required
+        <form
+          id="category-form"
+          onSubmit={(e) => {
+            e.preventDefault()
+            form.handleSubmit()
+          }}
+          className="flex flex-col gap-4"
+        >
+          <FieldGroup>
+            <form.Field
+              name="name"
+              children={(field) => {
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor="category-name">Name</FieldLabel>
+                    <Input
+                      id="category-name"
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={isInvalid}
+                      placeholder="Category name"
+                    />
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                )
+              }}
             />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="category-description">Description</Label>
-            <Input
-              id="category-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Optional description"
+            <form.Field
+              name="description"
+              children={(field) => {
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor="category-description">Description</FieldLabel>
+                    <Input
+                      id="category-description"
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={isInvalid}
+                      placeholder="Optional description"
+                    />
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                )
+              }}
             />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : isEditing ? "Update" : "Create"}
-            </Button>
-          </DialogFooter>
+          </FieldGroup>
         </form>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="submit" form="category-form" disabled={isPending}>
+            {isPending ? "Saving..." : isEditing ? "Update" : "Create"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )
