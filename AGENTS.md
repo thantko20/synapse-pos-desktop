@@ -7,7 +7,7 @@ Wails desktop POS app with Go backend and React/TypeScript frontend.
 - `internal/<feature>/` — Vertical slices per feature (model, repository, service, api, errors, tests)
 - `internal/database/` — Database connection, migrations, test helpers
 - `internal/shared/` — Shared errors and utilities
-- `frontend/src/features/<feature>/` — Feature-foldered frontend (api, types, queries, columns, components)
+- `frontend/src/features/<feature>/` — Feature-foldered frontend (api, types, schemas, queries, columns, components)
 - `frontend/src/routes/` — TanStack Router file-based routes
 - `frontend/src/components/ui/` — shadcn/ui components
 - `main.go` — Entry point, initializes SQLite DB and Wails app, wires Api structs
@@ -56,7 +56,8 @@ wails generate module  # Regenerate frontend bindings after Go API changes
 - TanStack Router for file-based routing
 - TanStack Query with `queryOptions` pattern for data fetching — define query options in `features/<feature>/queries.ts`, use `useQuery`/`useMutation` in components
 - TanStack Table for data tables with shadcn Table components
-- Feature folders: `frontend/src/features/<feature>/` contains `api.ts` (Wails binding wrappers), `types.ts` (inferred from Wails models), `queries.ts`, `columns.tsx`, `components/`, `index.ts` (barrel export)
+- Feature folders: `frontend/src/features/<feature>/` contains `api.ts` (Wails binding wrappers), `types.ts` (inferred from Wails models), `schemas.ts` (Valibot form schemas, PascalCase names), `queries.ts`, `columns.tsx`, `components/`, `index.ts` (barrel export)
+- Forms: TanStack Form with Valibot schemas via Standard Schema (no adapter needed); use `Field`/`FieldGroup`/`FieldLabel`/`FieldError` from `field.tsx` with `data-invalid`/`aria-invalid` for validation states
 - Wails bindings auto-generated at `frontend/wailsjs/go/` — never edit manually; run `wails generate module` after Go API changes
 - Types inferred from Wails-generated models in `wailsjs/go/models.ts`
 - Dialog pattern: shared dialog component for create/edit flows
