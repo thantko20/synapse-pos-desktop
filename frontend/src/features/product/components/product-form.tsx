@@ -32,11 +32,8 @@ import { summarizeVariantUnits } from "../unit-summary";
 import {
   CreateProductInput,
   UpdateProductInput,
-  type CreateProductVariantInput,
-  type CreateProductVariantUnitInput,
+  UpdateProductVariantInput,
   type Product,
-  type UpdateProductVariantInput,
-  type UpdateProductVariantUnitInput,
 } from "../types";
 
 function createEmptyVariant() {
@@ -111,20 +108,23 @@ export function ProductForm({ productId }: ProductFormProps) {
             categoryId: value.categoryId,
             brand: value.brand,
             notes: value.notes,
-            variants: value.variants.map<UpdateProductVariantInput>((v) => ({
-              id: v.id,
-              name: v.name,
-              sku: v.sku,
-              barcode: v.barcode,
-              units: v.units.map<UpdateProductVariantUnitInput>((unit) => ({
-                unitId: unit.unitId,
-                parentUnitId: unit.parentUnitId,
-                factorToParent: unit.factorToParent,
-                isDefault: unit.isDefault,
-              })),
-              reorderPoint: v.reorderPoint,
-              alertThreshold: v.alertThreshold,
-            })),
+            variants: value.variants.map(
+              (v) =>
+                new UpdateProductVariantInput({
+                  id: v.id,
+                  name: v.name,
+                  sku: v.sku,
+                  barcode: v.barcode,
+                  units: v.units.map((unit) => ({
+                    unitId: unit.unitId,
+                    parentUnitId: unit.parentUnitId,
+                    factorToParent: unit.factorToParent,
+                    isDefault: unit.isDefault,
+                  })),
+                  reorderPoint: v.reorderPoint,
+                  alertThreshold: v.alertThreshold,
+                })
+            ),
           })
         );
         return;
@@ -137,19 +137,19 @@ export function ProductForm({ productId }: ProductFormProps) {
           categoryId: value.categoryId,
           brand: value.brand,
           notes: value.notes,
-            variants: value.variants.map<CreateProductVariantInput>((v) => ({
-              name: v.name,
-              sku: v.sku,
-              barcode: v.barcode,
-              units: v.units.map<CreateProductVariantUnitInput>((unit) => ({
-                unitId: unit.unitId,
-                parentUnitId: unit.parentUnitId,
-                factorToParent: unit.factorToParent,
-                isDefault: unit.isDefault,
-              })),
-              reorderPoint: v.reorderPoint,
-              alertThreshold: v.alertThreshold,
+          variants: value.variants.map((v) => ({
+            name: v.name,
+            sku: v.sku,
+            barcode: v.barcode,
+            units: v.units.map((unit) => ({
+              unitId: unit.unitId,
+              parentUnitId: unit.parentUnitId,
+              factorToParent: unit.factorToParent,
+              isDefault: unit.isDefault,
             })),
+            reorderPoint: v.reorderPoint,
+            alertThreshold: v.alertThreshold,
+          })),
         })
       );
     },
@@ -189,7 +189,9 @@ export function ProductForm({ productId }: ProductFormProps) {
   const isPending = createMutation.isPending || updateMutation.isPending;
   const availableUnits = unitsResult?.items ?? [];
   const activeDialogVariant =
-    unitsDialogIndex === null ? null : form.state.values.variants[unitsDialogIndex];
+    unitsDialogIndex === null
+      ? null
+      : form.state.values.variants[unitsDialogIndex];
 
   if (isEditing && isLoading) {
     return (
@@ -432,7 +434,8 @@ export function ProductForm({ productId }: ProductFormProps) {
                       <div>
                         <h3 className="font-medium">Variant {index + 1}</h3>
                         <p className="text-xs text-muted-foreground">
-                          Identifiers, thresholds, and unit relations for one sellable option.
+                          Identifiers, thresholds, and unit relations for one
+                          sellable option.
                         </p>
                       </div>
                       <Button
