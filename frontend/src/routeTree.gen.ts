@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnitsRouteImport } from './routes/units'
 import { Route as ProductsRouteImport } from './routes/products'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as AboutRouteImport } from './routes/about'
@@ -16,6 +17,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsNewRouteImport } from './routes/products_.new'
 import { Route as ProductsIdEditRouteImport } from './routes/products_.$id.edit'
 
+const UnitsRoute = UnitsRouteImport.update({
+  id: '/units',
+  path: '/units',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsRoute = ProductsRouteImport.update({
   id: '/products',
   path: '/products',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/categories': typeof CategoriesRoute
   '/products': typeof ProductsRoute
+  '/units': typeof UnitsRoute
   '/products/new': typeof ProductsNewRoute
   '/products/$id/edit': typeof ProductsIdEditRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/categories': typeof CategoriesRoute
   '/products': typeof ProductsRoute
+  '/units': typeof UnitsRoute
   '/products/new': typeof ProductsNewRoute
   '/products/$id/edit': typeof ProductsIdEditRoute
 }
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/categories': typeof CategoriesRoute
   '/products': typeof ProductsRoute
+  '/units': typeof UnitsRoute
   '/products_/new': typeof ProductsNewRoute
   '/products_/$id/edit': typeof ProductsIdEditRoute
 }
@@ -79,6 +88,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/categories'
     | '/products'
+    | '/units'
     | '/products/new'
     | '/products/$id/edit'
   fileRoutesByTo: FileRoutesByTo
@@ -87,6 +97,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/categories'
     | '/products'
+    | '/units'
     | '/products/new'
     | '/products/$id/edit'
   id:
@@ -95,6 +106,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/categories'
     | '/products'
+    | '/units'
     | '/products_/new'
     | '/products_/$id/edit'
   fileRoutesById: FileRoutesById
@@ -104,12 +116,20 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   CategoriesRoute: typeof CategoriesRoute
   ProductsRoute: typeof ProductsRoute
+  UnitsRoute: typeof UnitsRoute
   ProductsNewRoute: typeof ProductsNewRoute
   ProductsIdEditRoute: typeof ProductsIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/units': {
+      id: '/units'
+      path: '/units'
+      fullPath: '/units'
+      preLoaderRoute: typeof UnitsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products': {
       id: '/products'
       path: '/products'
@@ -160,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   CategoriesRoute: CategoriesRoute,
   ProductsRoute: ProductsRoute,
+  UnitsRoute: UnitsRoute,
   ProductsNewRoute: ProductsNewRoute,
   ProductsIdEditRoute: ProductsIdEditRoute,
 }

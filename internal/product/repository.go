@@ -125,6 +125,13 @@ func (r *ProductRepository) GetProductById(ctx context.Context, id string) (*Pro
 	if err != nil {
 		return nil, err
 	}
+	variantUnits, err := r.GetVariantUnitsByVariantIDs(ctx, variantIDs(variants))
+	if err != nil {
+		return nil, err
+	}
+	for idx := range variants {
+		variants[idx].Units = variantUnits[variants[idx].ID]
+	}
 
 	products[0].Variants = variants
 	products[0].VariantCount = len(variants)
@@ -149,7 +156,7 @@ func (r *ProductRepository) GetOneProduct(ctx context.Context, filter ProductFil
 
 func (r *ProductRepository) GetVariantsByProductID(ctx context.Context, productID string) ([]ProductVariant, error) {
 	query := `
-		SELECT id, product_id, name, sku, barcode, unit_name, reorder_point, alert_threshold, is_active, created_at, updated_at
+		SELECT id, product_id, name, sku, barcode, reorder_point, alert_threshold, is_active, created_at, updated_at
 		FROM product_variant
 		WHERE product_id = ? AND is_active = true
 		ORDER BY created_at ASC
@@ -172,7 +179,6 @@ func (r *ProductRepository) GetVariantsByProductID(ctx context.Context, productI
 			&variant.Name,
 			&variant.SKU,
 			&variant.Barcode,
-			&variant.UnitName,
 			&variant.ReorderPoint,
 			&variant.AlertThreshold,
 			&variant.IsActive,
@@ -188,6 +194,64 @@ func (r *ProductRepository) GetVariantsByProductID(ctx context.Context, productI
 	}
 
 	return variants, rows.Err()
+}
+
+func (r *ProductRepository) GetVariantUnitsByVariantIDs(ctx context.Context, ids []string) (map[string][]ProductVariantUnit, error) {
+	result := make(map[string][]ProductVariantUnit, len(ids))
+	if len(ids) == 0 {
+		return result, nil
+	}
+
+	builder := sq.Select(
+		"pvu.id",
+		"pvu.product_variant_id",
+		"pvu.unit_id",
+		"u.name",
+		"u.symbol",
+		"COALESCE(pvu.parent_unit_id, '')",
+		"pvu.factor_to_parent",
+		"pvu.is_default",
+		"pvu.is_active",
+		"pvu.created_at",
+		"pvu.updated_at",
+	).
+		From("product_variant_unit pvu").
+		Join("unit u ON u.id = pvu.unit_id").
+		Where(sq.Eq{"pvu.product_variant_id": ids, "pvu.is_active": true}).
+		OrderBy("pvu.created_at ASC")
+
+	rows, err := builder.RunWith(r.db).QueryContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var item ProductVariantUnit
+		var createdAt int64
+		var updatedAt int64
+		if err := rows.Scan(
+			&item.ID,
+			&item.ProductVariantID,
+			&item.UnitID,
+			&item.UnitName,
+			&item.UnitSymbol,
+			&item.ParentUnitID,
+			&item.FactorToParent,
+			&item.IsDefault,
+			&item.IsActive,
+			&createdAt,
+			&updatedAt,
+		); err != nil {
+			return nil, err
+		}
+
+		item.CreatedAt = time.UnixMilli(createdAt)
+		item.UpdatedAt = time.UnixMilli(updatedAt)
+		result[item.ProductVariantID] = append(result[item.ProductVariantID], item)
+	}
+
+	return result, rows.Err()
 }
 
 func (r *ProductRepository) CreateProductWithVariants(ctx context.Context, product *Product, variants []ProductVariant) error {
@@ -212,10 +276,14 @@ func (r *ProductRepository) CreateProductWithVariants(ctx context.Context, produ
 
 	for idx := range variants {
 		_, err = tx.ExecContext(ctx, `
-			INSERT INTO product_variant (id, product_id, name, sku, barcode, unit_name, reorder_point, alert_threshold, is_active, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`, variants[idx].ID, variants[idx].ProductID, variants[idx].Name, variants[idx].SKU, variants[idx].Barcode, variants[idx].UnitName, variants[idx].ReorderPoint, variants[idx].AlertThreshold, variants[idx].IsActive, variants[idx].CreatedAt.UnixMilli(), variants[idx].UpdatedAt.UnixMilli())
+			INSERT INTO product_variant (id, product_id, name, sku, barcode, reorder_point, alert_threshold, is_active, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`, variants[idx].ID, variants[idx].ProductID, variants[idx].Name, variants[idx].SKU, variants[idx].Barcode, variants[idx].ReorderPoint, variants[idx].AlertThreshold, variants[idx].IsActive, variants[idx].CreatedAt.UnixMilli(), variants[idx].UpdatedAt.UnixMilli())
 		if err != nil {
+			return err
+		}
+
+		if err = insertVariantUnits(ctx, tx, variants[idx].Units); err != nil {
 			return err
 		}
 	}
@@ -247,10 +315,14 @@ func (r *ProductRepository) UpdateProductWithVariants(ctx context.Context, produ
 
 	for idx := range createVariants {
 		_, err = tx.ExecContext(ctx, `
-			INSERT INTO product_variant (id, product_id, name, sku, barcode, unit_name, reorder_point, alert_threshold, is_active, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`, createVariants[idx].ID, createVariants[idx].ProductID, createVariants[idx].Name, createVariants[idx].SKU, createVariants[idx].Barcode, createVariants[idx].UnitName, createVariants[idx].ReorderPoint, createVariants[idx].AlertThreshold, createVariants[idx].IsActive, createVariants[idx].CreatedAt.UnixMilli(), createVariants[idx].UpdatedAt.UnixMilli())
+			INSERT INTO product_variant (id, product_id, name, sku, barcode, reorder_point, alert_threshold, is_active, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`, createVariants[idx].ID, createVariants[idx].ProductID, createVariants[idx].Name, createVariants[idx].SKU, createVariants[idx].Barcode, createVariants[idx].ReorderPoint, createVariants[idx].AlertThreshold, createVariants[idx].IsActive, createVariants[idx].CreatedAt.UnixMilli(), createVariants[idx].UpdatedAt.UnixMilli())
 		if err != nil {
+			return err
+		}
+
+		if err = insertVariantUnits(ctx, tx, createVariants[idx].Units); err != nil {
 			return err
 		}
 	}
@@ -258,10 +330,17 @@ func (r *ProductRepository) UpdateProductWithVariants(ctx context.Context, produ
 	for idx := range updateVariants {
 		_, err = tx.ExecContext(ctx, `
 			UPDATE product_variant
-			SET name = ?, sku = ?, barcode = ?, unit_name = ?, reorder_point = ?, alert_threshold = ?, updated_at = ?
+			SET name = ?, sku = ?, barcode = ?, reorder_point = ?, alert_threshold = ?, updated_at = ?
 			WHERE id = ?
-		`, updateVariants[idx].Name, updateVariants[idx].SKU, updateVariants[idx].Barcode, updateVariants[idx].UnitName, updateVariants[idx].ReorderPoint, updateVariants[idx].AlertThreshold, updateVariants[idx].UpdatedAt.UnixMilli(), updateVariants[idx].ID)
+		`, updateVariants[idx].Name, updateVariants[idx].SKU, updateVariants[idx].Barcode, updateVariants[idx].ReorderPoint, updateVariants[idx].AlertThreshold, updateVariants[idx].UpdatedAt.UnixMilli(), updateVariants[idx].ID)
 		if err != nil {
+			return err
+		}
+
+		if _, err = tx.ExecContext(ctx, `DELETE FROM product_variant_unit WHERE product_variant_id = ?`, updateVariants[idx].ID); err != nil {
+			return err
+		}
+		if err = insertVariantUnits(ctx, tx, updateVariants[idx].Units); err != nil {
 			return err
 		}
 	}
@@ -343,4 +422,27 @@ func nullableString(value string) any {
 	}
 
 	return trimmed
+}
+
+func insertVariantUnits(ctx context.Context, tx *sql.Tx, units []ProductVariantUnit) error {
+	for idx := range units {
+		_, err := tx.ExecContext(ctx, `
+			INSERT INTO product_variant_unit (id, product_variant_id, unit_id, parent_unit_id, factor_to_parent, is_default, is_active, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`, units[idx].ID, units[idx].ProductVariantID, units[idx].UnitID, nullableString(units[idx].ParentUnitID), units[idx].FactorToParent, units[idx].IsDefault, units[idx].IsActive, units[idx].CreatedAt.UnixMilli(), units[idx].UpdatedAt.UnixMilli())
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func variantIDs(items []ProductVariant) []string {
+	ids := make([]string, 0, len(items))
+	for _, item := range items {
+		ids = append(ids, item.ID)
+	}
+
+	return ids
 }

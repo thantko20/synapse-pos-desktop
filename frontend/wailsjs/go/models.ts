@@ -141,11 +141,29 @@ export namespace category {
 
 export namespace product {
 	
+	export class CreateProductVariantUnitInput {
+	    unitId: string;
+	    parentUnitId: string;
+	    factorToParent: number;
+	    isDefault: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new CreateProductVariantUnitInput(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.unitId = source["unitId"];
+	        this.parentUnitId = source["parentUnitId"];
+	        this.factorToParent = source["factorToParent"];
+	        this.isDefault = source["isDefault"];
+	    }
+	}
 	export class CreateProductVariantInput {
 	    name: string;
 	    sku: string;
 	    barcode: string;
-	    unitName: string;
+	    units: CreateProductVariantUnitInput[];
 	    reorderPoint: number;
 	    alertThreshold: number;
 	
@@ -158,10 +176,28 @@ export namespace product {
 	        this.name = source["name"];
 	        this.sku = source["sku"];
 	        this.barcode = source["barcode"];
-	        this.unitName = source["unitName"];
+	        this.units = this.convertValues(source["units"], CreateProductVariantUnitInput);
 	        this.reorderPoint = source["reorderPoint"];
 	        this.alertThreshold = source["alertThreshold"];
 	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class CreateProductInput {
 	    name: string;
@@ -204,6 +240,7 @@ export namespace product {
 		}
 	}
 	
+	
 	export class GetProductByIdInput {
 	    id: string;
 	
@@ -236,13 +273,65 @@ export namespace product {
 	        this.includeArchived = source["includeArchived"];
 	    }
 	}
+	export class ProductVariantUnit {
+	    id: string;
+	    productVariantId: string;
+	    unitId: string;
+	    unitName: string;
+	    unitSymbol: string;
+	    parentUnitId: string;
+	    factorToParent: number;
+	    isDefault: boolean;
+	    isActive: boolean;
+	    // Go type: time
+	    createdAt: any;
+	    // Go type: time
+	    updatedAt: any;
+	
+	    static createFrom(source: any = {}) {
+	        return new ProductVariantUnit(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.productVariantId = source["productVariantId"];
+	        this.unitId = source["unitId"];
+	        this.unitName = source["unitName"];
+	        this.unitSymbol = source["unitSymbol"];
+	        this.parentUnitId = source["parentUnitId"];
+	        this.factorToParent = source["factorToParent"];
+	        this.isDefault = source["isDefault"];
+	        this.isActive = source["isActive"];
+	        this.createdAt = this.convertValues(source["createdAt"], null);
+	        this.updatedAt = this.convertValues(source["updatedAt"], null);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class ProductVariant {
 	    id: string;
 	    productId: string;
 	    name: string;
 	    sku: string;
 	    barcode: string;
-	    unitName: string;
+	    units?: ProductVariantUnit[];
 	    reorderPoint: number;
 	    alertThreshold: number;
 	    isActive: boolean;
@@ -262,7 +351,7 @@ export namespace product {
 	        this.name = source["name"];
 	        this.sku = source["sku"];
 	        this.barcode = source["barcode"];
-	        this.unitName = source["unitName"];
+	        this.units = this.convertValues(source["units"], ProductVariantUnit);
 	        this.reorderPoint = source["reorderPoint"];
 	        this.alertThreshold = source["alertThreshold"];
 	        this.isActive = source["isActive"];
@@ -397,12 +486,31 @@ export namespace product {
 	
 	
 	
+	
+	export class UpdateProductVariantUnitInput {
+	    unitId: string;
+	    parentUnitId: string;
+	    factorToParent: number;
+	    isDefault: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateProductVariantUnitInput(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.unitId = source["unitId"];
+	        this.parentUnitId = source["parentUnitId"];
+	        this.factorToParent = source["factorToParent"];
+	        this.isDefault = source["isDefault"];
+	    }
+	}
 	export class UpdateProductVariantInput {
 	    id: string;
 	    name: string;
 	    sku: string;
 	    barcode: string;
-	    unitName: string;
+	    units: UpdateProductVariantUnitInput[];
 	    reorderPoint: number;
 	    alertThreshold: number;
 	
@@ -416,10 +524,28 @@ export namespace product {
 	        this.name = source["name"];
 	        this.sku = source["sku"];
 	        this.barcode = source["barcode"];
-	        this.unitName = source["unitName"];
+	        this.units = this.convertValues(source["units"], UpdateProductVariantUnitInput);
 	        this.reorderPoint = source["reorderPoint"];
 	        this.alertThreshold = source["alertThreshold"];
 	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class UpdateProductInput {
 	    id: string;
@@ -462,6 +588,149 @@ export namespace product {
 		    }
 		    return a;
 		}
+	}
+	
+
+}
+
+export namespace unit {
+	
+	export class CreateUnitInput {
+	    name: string;
+	    symbol: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new CreateUnitInput(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.symbol = source["symbol"];
+	    }
+	}
+	export class GetAllUnitsInput {
+	    page: number;
+	    pageSize: number;
+	    includeArchived: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new GetAllUnitsInput(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.page = source["page"];
+	        this.pageSize = source["pageSize"];
+	        this.includeArchived = source["includeArchived"];
+	    }
+	}
+	export class Unit {
+	    id: string;
+	    name: string;
+	    symbol: string;
+	    isActive: boolean;
+	    // Go type: time
+	    createdAt: any;
+	    // Go type: time
+	    updatedAt: any;
+	
+	    static createFrom(source: any = {}) {
+	        return new Unit(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.symbol = source["symbol"];
+	        this.isActive = source["isActive"];
+	        this.createdAt = this.convertValues(source["createdAt"], null);
+	        this.updatedAt = this.convertValues(source["updatedAt"], null);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class GetAllUnitsResult {
+	    items: Unit[];
+	    total: number;
+	    page: number;
+	    pageSize: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new GetAllUnitsResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.items = this.convertValues(source["items"], Unit);
+	        this.total = source["total"];
+	        this.page = source["page"];
+	        this.pageSize = source["pageSize"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class GetUnitByIdInput {
+	    id: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new GetUnitByIdInput(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	    }
+	}
+	
+	export class UpdateUnitInput {
+	    id: string;
+	    name: string;
+	    symbol: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateUnitInput(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.symbol = source["symbol"];
+	    }
 	}
 
 }

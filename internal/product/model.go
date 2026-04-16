@@ -28,17 +28,31 @@ type ProductCategory struct {
 }
 
 type ProductVariant struct {
-	ID             string    `json:"id"`
-	ProductID      string    `json:"productId"`
-	Name           string    `json:"name"`
-	SKU            string    `json:"sku"`
-	Barcode        string    `json:"barcode"`
-	UnitName       string    `json:"unitName"`
-	ReorderPoint   int       `json:"reorderPoint"`
-	AlertThreshold int       `json:"alertThreshold"`
-	IsActive       bool      `json:"isActive"`
-	CreatedAt      time.Time `json:"createdAt"`
-	UpdatedAt      time.Time `json:"updatedAt"`
+	ID             string               `json:"id"`
+	ProductID      string               `json:"productId"`
+	Name           string               `json:"name"`
+	SKU            string               `json:"sku"`
+	Barcode        string               `json:"barcode"`
+	Units          []ProductVariantUnit `json:"units,omitempty"`
+	ReorderPoint   int                  `json:"reorderPoint"`
+	AlertThreshold int                  `json:"alertThreshold"`
+	IsActive       bool                 `json:"isActive"`
+	CreatedAt      time.Time            `json:"createdAt"`
+	UpdatedAt      time.Time            `json:"updatedAt"`
+}
+
+type ProductVariantUnit struct {
+	ID               string    `json:"id"`
+	ProductVariantID string    `json:"productVariantId"`
+	UnitID           string    `json:"unitId"`
+	UnitName         string    `json:"unitName"`
+	UnitSymbol       string    `json:"unitSymbol"`
+	ParentUnitID     string    `json:"parentUnitId"`
+	FactorToParent   int       `json:"factorToParent"`
+	IsDefault        bool      `json:"isDefault"`
+	IsActive         bool      `json:"isActive"`
+	CreatedAt        time.Time `json:"createdAt"`
+	UpdatedAt        time.Time `json:"updatedAt"`
 }
 
 type ProductFilter struct {
@@ -64,12 +78,27 @@ type GetProductByIdInput struct {
 }
 
 type CreateProductVariantInput struct {
-	Name           string `json:"name"`
-	SKU            string `json:"sku"`
-	Barcode        string `json:"barcode"`
-	UnitName       string `json:"unitName"`
-	ReorderPoint   int    `json:"reorderPoint"`
-	AlertThreshold int    `json:"alertThreshold"`
+	Name           string                          `json:"name"`
+	SKU            string                          `json:"sku"`
+	Barcode        string                          `json:"barcode"`
+	Units          []CreateProductVariantUnitInput `json:"units"`
+	ReorderPoint   int                             `json:"reorderPoint"`
+	AlertThreshold int                             `json:"alertThreshold"`
+}
+
+type CreateProductVariantUnitInput struct {
+	UnitID         string `json:"unitId"`
+	ParentUnitID   string `json:"parentUnitId"`
+	FactorToParent int    `json:"factorToParent"`
+	IsDefault      bool   `json:"isDefault"`
+}
+
+func (i *CreateProductVariantUnitInput) validate() error {
+	if strings.TrimSpace(i.UnitID) == "" || i.FactorToParent <= 0 {
+		return shared.ValidationErr
+	}
+
+	return nil
 }
 
 func (i *CreateProductVariantInput) validate() error {
@@ -79,6 +108,12 @@ func (i *CreateProductVariantInput) validate() error {
 
 	if i.ReorderPoint < 0 || i.AlertThreshold < 0 {
 		return shared.ValidationErr
+	}
+
+	for idx := range i.Units {
+		if err := i.Units[idx].validate(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -108,13 +143,28 @@ func (i *CreateProductInput) validate() error {
 }
 
 type UpdateProductVariantInput struct {
-	ID             string `json:"id"`
-	Name           string `json:"name"`
-	SKU            string `json:"sku"`
-	Barcode        string `json:"barcode"`
-	UnitName       string `json:"unitName"`
-	ReorderPoint   int    `json:"reorderPoint"`
-	AlertThreshold int    `json:"alertThreshold"`
+	ID             string                          `json:"id"`
+	Name           string                          `json:"name"`
+	SKU            string                          `json:"sku"`
+	Barcode        string                          `json:"barcode"`
+	Units          []UpdateProductVariantUnitInput `json:"units"`
+	ReorderPoint   int                             `json:"reorderPoint"`
+	AlertThreshold int                             `json:"alertThreshold"`
+}
+
+type UpdateProductVariantUnitInput struct {
+	UnitID         string `json:"unitId"`
+	ParentUnitID   string `json:"parentUnitId"`
+	FactorToParent int    `json:"factorToParent"`
+	IsDefault      bool   `json:"isDefault"`
+}
+
+func (i *UpdateProductVariantUnitInput) validate() error {
+	if strings.TrimSpace(i.UnitID) == "" || i.FactorToParent <= 0 {
+		return shared.ValidationErr
+	}
+
+	return nil
 }
 
 func (i *UpdateProductVariantInput) validate() error {
@@ -124,6 +174,12 @@ func (i *UpdateProductVariantInput) validate() error {
 
 	if i.ReorderPoint < 0 || i.AlertThreshold < 0 {
 		return shared.ValidationErr
+	}
+
+	for idx := range i.Units {
+		if err := i.Units[idx].validate(); err != nil {
+			return err
+		}
 	}
 
 	return nil

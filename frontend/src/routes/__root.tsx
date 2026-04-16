@@ -16,7 +16,7 @@ import {
   SidebarTrigger,
 } from "#/components/ui/sidebar";
 import { Separator } from "#/components/ui/separator";
-import { BoxesIcon, LayoutGridIcon, PackageIcon } from "lucide-react";
+import { BoxesIcon, LayoutGridIcon, PackageIcon, RulerIcon } from "lucide-react";
 
 import "../styles.css";
 
@@ -24,6 +24,7 @@ const navItems = [
   { title: "Dashboard", href: "/", icon: LayoutGridIcon },
   { title: "Categories", href: "/categories", icon: PackageIcon },
   { title: "Products", href: "/products", icon: BoxesIcon },
+  { title: "Units", href: "/units", icon: RulerIcon },
 ];
 
 export const Route = createRootRoute({

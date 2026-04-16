@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"embed"
 	"io/fs"
+	_ "synapse-pos-desktop/internal/database/migrations"
 
 	"github.com/pressly/goose/v3"
 	_ "modernc.org/sqlite"

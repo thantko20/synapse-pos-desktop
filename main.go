@@ -8,6 +8,7 @@ import (
 	"synapse-pos-desktop/internal/category"
 	"synapse-pos-desktop/internal/database"
 	"synapse-pos-desktop/internal/product"
+	"synapse-pos-desktop/internal/unit"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -28,6 +29,7 @@ func main() {
 	app := NewApp()
 	categoryApi := category.NewCategoryApi(db)
 	productApi := product.NewProductApi(db)
+	unitApi := unit.NewUnitApi(db)
 
 	err = wails.Run(&options.App{
 		Title:  "synapse-pos-desktop",
@@ -41,11 +43,13 @@ func main() {
 			app.startup(ctx)
 			categoryApi.SetContext(ctx)
 			productApi.SetContext(ctx)
+			unitApi.SetContext(ctx)
 		},
 		Bind: []interface{}{
 			app,
 			categoryApi,
 			productApi,
+			unitApi,
 		},
 	})
 

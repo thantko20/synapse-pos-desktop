@@ -5,11 +5,14 @@ export { productApi } from "./api"
 export type {
   Product,
   ProductVariant,
+  ProductVariantUnit,
   GetProductsResult,
   GetProductsInput,
   GetProductByIdInput,
   CreateProductInput,
   CreateProductVariantInput,
+  CreateProductVariantUnitInput,
   UpdateProductInput,
   UpdateProductVariantInput,
+  UpdateProductVariantUnitInput,
 } from "./types"

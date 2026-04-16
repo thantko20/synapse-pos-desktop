@@ -3,6 +3,7 @@ package product
 import (
 	"context"
 	"database/sql"
+	unitfeature "synapse-pos-desktop/internal/unit"
 )
 
 type ProductApi struct {
@@ -12,7 +13,8 @@ type ProductApi struct {
 
 func NewProductApi(db *sql.DB) *ProductApi {
 	repo := NewProductRepository(db)
-	svc := NewProductService(repo)
+	unitRepo := unitfeature.NewUnitRepository(db)
+	svc := NewProductService(repo, unitRepo)
 	return &ProductApi{svc: svc}
 }
 

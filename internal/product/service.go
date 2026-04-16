@@ -4,17 +4,19 @@ import (
 	"context"
 	"log"
 	"strings"
+	unitfeature "synapse-pos-desktop/internal/unit"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type ProductService struct {
-	repo *ProductRepository
+	repo     *ProductRepository
+	unitRepo *unitfeature.UnitRepository
 }
 
-func NewProductService(repo *ProductRepository) *ProductService {
-	return &ProductService{repo: repo}
+func NewProductService(repo *ProductRepository, unitRepo *unitfeature.UnitRepository) *ProductService {
+	return &ProductService{repo: repo, unitRepo: unitRepo}
 }
 
 func (s *ProductService) GetAllProducts(ctx context.Context, input GetProductsInput) (*GetProductsResult, error) {
@@ -79,6 +81,10 @@ func (s *ProductService) CreateProduct(ctx context.Context, input CreateProductI
 	if err := s.validateVariantIdentifiers(ctx, toCreateVariantIdentifiers(input.Variants), nil); err != nil {
 		return nil, err
 	}
+	activeUnits, err := s.loadActiveUnits(ctx, toCreateVariantUnitInputs(input.Variants))
+	if err != nil {
+		return nil, err
+	}
 
 	productID, err := uuid.NewV7()
 	if err != nil {
@@ -111,7 +117,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, input CreateProductI
 			Name:           strings.TrimSpace(item.Name),
 			SKU:            strings.TrimSpace(item.SKU),
 			Barcode:        strings.TrimSpace(item.Barcode),
-			UnitName:       item.UnitName,
+			Units:          buildVariantUnits(product.ID, variantID.String(), now, item.Units, activeUnits),
 			ReorderPoint:   item.ReorderPoint,
 			AlertThreshold: item.AlertThreshold,
 			IsActive:       true,
@@ -159,6 +165,10 @@ func (s *ProductService) UpdateProduct(ctx context.Context, input UpdateProductI
 	if err := s.validateVariantIdentifiers(ctx, nil, input.Variants); err != nil {
 		return nil, err
 	}
+	activeUnits, err := s.loadActiveUnits(ctx, toUpdateVariantUnitInputs(input.Variants))
+	if err != nil {
+		return nil, err
+	}
 
 	existing.Name = strings.TrimSpace(input.Name)
 	existing.Description = input.Description
@@ -190,7 +200,7 @@ func (s *ProductService) UpdateProduct(ctx context.Context, input UpdateProductI
 				Name:           strings.TrimSpace(item.Name),
 				SKU:            strings.TrimSpace(item.SKU),
 				Barcode:        strings.TrimSpace(item.Barcode),
-				UnitName:       item.UnitName,
+				Units:          buildVariantUnits(existing.ID, variantID.String(), existing.UpdatedAt, toCreateVariantUnits(item.Units), activeUnits),
 				ReorderPoint:   item.ReorderPoint,
 				AlertThreshold: item.AlertThreshold,
 				IsActive:       true,
@@ -211,10 +221,14 @@ func (s *ProductService) UpdateProduct(ctx context.Context, input UpdateProductI
 		stored.Name = strings.TrimSpace(item.Name)
 		stored.SKU = strings.TrimSpace(item.SKU)
 		stored.Barcode = strings.TrimSpace(item.Barcode)
-		stored.UnitName = item.UnitName
+		stored.Units = buildVariantUnits(existing.ID, stored.ID, existing.UpdatedAt, toCreateVariantUnits(item.Units), activeUnits)
 		stored.ReorderPoint = item.ReorderPoint
 		stored.AlertThreshold = item.AlertThreshold
 		stored.UpdatedAt = existing.UpdatedAt
+
+		if baseUnitChanged(currentByID[item.ID].Units, stored.Units) {
+			return nil, VariantErrUnitBaseEdit
+		}
 
 		seen[stored.ID] = struct{}{}
 		updateVariants = append(updateVariants, stored)
@@ -256,7 +270,7 @@ func toCreateVariantIdentifiers(variants []CreateProductVariantInput) []UpdatePr
 			Name:           variant.Name,
 			SKU:            variant.SKU,
 			Barcode:        variant.Barcode,
-			UnitName:       variant.UnitName,
+			Units:          toUpdateVariantUnitsFromCreate(variant.Units),
 			ReorderPoint:   variant.ReorderPoint,
 			AlertThreshold: variant.AlertThreshold,
 		})
@@ -307,4 +321,197 @@ func (s *ProductService) validateVariantIdentifiers(ctx context.Context, createV
 	}
 
 	return nil
+}
+
+func (s *ProductService) loadActiveUnits(ctx context.Context, variants [][]CreateProductVariantUnitInput) (map[string]unitfeature.Unit, error) {
+	ids := make([]string, 0)
+	seen := map[string]struct{}{}
+	for _, units := range variants {
+		if err := validateVariantUnitHierarchy(units); err != nil {
+			return nil, err
+		}
+
+		for _, item := range units {
+			if _, ok := seen[item.UnitID]; ok {
+				continue
+			}
+			seen[item.UnitID] = struct{}{}
+			ids = append(ids, item.UnitID)
+		}
+	}
+
+	activeUnits, err := s.unitRepo.GetActiveUnitsByIDs(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+	if len(activeUnits) != len(ids) {
+		return nil, VariantErrUnitInactive
+	}
+
+	return activeUnits, nil
+}
+
+func validateVariantUnitHierarchy(units []CreateProductVariantUnitInput) error {
+	if len(units) == 0 {
+		return VariantErrUnitMin
+	}
+
+	seen := make(map[string]CreateProductVariantUnitInput, len(units))
+	rootCount := 0
+	defaultCount := 0
+	for _, item := range units {
+		if _, ok := seen[item.UnitID]; ok {
+			return VariantErrUnitDuplicate
+		}
+		seen[item.UnitID] = item
+		if strings.TrimSpace(item.ParentUnitID) == "" {
+			rootCount++
+		}
+		if item.IsDefault {
+			defaultCount++
+		}
+	}
+
+	if rootCount != 1 {
+		return VariantErrUnitRoot
+	}
+	if defaultCount != 1 {
+		return VariantErrUnitDefault
+	}
+
+	for _, item := range units {
+		parentID := strings.TrimSpace(item.ParentUnitID)
+		if parentID == "" {
+			continue
+		}
+		if parentID == item.UnitID {
+			return VariantErrUnitCycle
+		}
+		if _, ok := seen[parentID]; !ok {
+			return VariantErrUnitParent
+		}
+		if hasUnitCycle(item.UnitID, seen) {
+			return VariantErrUnitCycle
+		}
+	}
+
+	return nil
+}
+
+func hasUnitCycle(startUnitID string, units map[string]CreateProductVariantUnitInput) bool {
+	visited := map[string]struct{}{}
+	current := startUnitID
+	for {
+		item, ok := units[current]
+		if !ok {
+			return false
+		}
+
+		parentID := strings.TrimSpace(item.ParentUnitID)
+		if parentID == "" {
+			return false
+		}
+		if _, ok := visited[parentID]; ok {
+			return true
+		}
+		visited[parentID] = struct{}{}
+		current = parentID
+	}
+}
+
+func buildVariantUnits(productID string, variantID string, now time.Time, inputs []CreateProductVariantUnitInput, activeUnits map[string]unitfeature.Unit) []ProductVariantUnit {
+	result := make([]ProductVariantUnit, 0, len(inputs))
+	for _, item := range inputs {
+		id := uuid.Must(uuid.NewV7())
+		unit := activeUnits[item.UnitID]
+		result = append(result, ProductVariantUnit{
+			ID:               id.String(),
+			ProductVariantID: variantID,
+			UnitID:           item.UnitID,
+			UnitName:         unit.Name,
+			UnitSymbol:       unit.Symbol,
+			ParentUnitID:     strings.TrimSpace(item.ParentUnitID),
+			FactorToParent:   item.FactorToParent,
+			IsDefault:        item.IsDefault,
+			IsActive:         true,
+			CreatedAt:        now,
+			UpdatedAt:        now,
+		})
+	}
+
+	return result
+}
+
+func toCreateVariantUnitInputs(variants []CreateProductVariantInput) [][]CreateProductVariantUnitInput {
+	result := make([][]CreateProductVariantUnitInput, 0, len(variants))
+	for _, variant := range variants {
+		result = append(result, variant.Units)
+	}
+
+	return result
+}
+
+func toUpdateVariantUnitInputs(variants []UpdateProductVariantInput) [][]CreateProductVariantUnitInput {
+	result := make([][]CreateProductVariantUnitInput, 0, len(variants))
+	for _, variant := range variants {
+		result = append(result, toCreateVariantUnits(variant.Units))
+	}
+
+	return result
+}
+
+func toCreateVariantUnits(units []UpdateProductVariantUnitInput) []CreateProductVariantUnitInput {
+	result := make([]CreateProductVariantUnitInput, 0, len(units))
+	for _, item := range units {
+		result = append(result, CreateProductVariantUnitInput{
+			UnitID:         item.UnitID,
+			ParentUnitID:   item.ParentUnitID,
+			FactorToParent: item.FactorToParent,
+			IsDefault:      item.IsDefault,
+		})
+	}
+
+	return result
+}
+
+func toUpdateVariantUnits(units []ProductVariantUnit) []UpdateProductVariantUnitInput {
+	result := make([]UpdateProductVariantUnitInput, 0, len(units))
+	for _, item := range units {
+		result = append(result, UpdateProductVariantUnitInput{
+			UnitID:         item.UnitID,
+			ParentUnitID:   item.ParentUnitID,
+			FactorToParent: item.FactorToParent,
+			IsDefault:      item.IsDefault,
+		})
+	}
+
+	return result
+}
+
+func toUpdateVariantUnitsFromCreate(units []CreateProductVariantUnitInput) []UpdateProductVariantUnitInput {
+	result := make([]UpdateProductVariantUnitInput, 0, len(units))
+	for _, item := range units {
+		result = append(result, UpdateProductVariantUnitInput{
+			UnitID:         item.UnitID,
+			ParentUnitID:   item.ParentUnitID,
+			FactorToParent: item.FactorToParent,
+			IsDefault:      item.IsDefault,
+		})
+	}
+
+	return result
+}
+
+func baseUnitChanged(current []ProductVariantUnit, next []ProductVariantUnit) bool {
+	return rootUnitID(current) != rootUnitID(next)
+}
+
+func rootUnitID(units []ProductVariantUnit) string {
+	for _, item := range units {
+		if strings.TrimSpace(item.ParentUnitID) == "" {
+			return item.UnitID
+		}
+	}
+
+	return ""
 }

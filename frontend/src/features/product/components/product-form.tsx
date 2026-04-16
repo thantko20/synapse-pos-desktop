@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -23,15 +23,20 @@ import {
 } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
 import { categoryQueries } from "#/features/category";
+import { unitQueries } from "#/features/unit";
 import { productApi } from "../api";
+import { VariantUnitsDialog } from "./variant-units-dialog";
 import { productQueries } from "../queries";
 import { ProductFormSchema } from "../schemas";
+import { summarizeVariantUnits } from "../unit-summary";
 import {
   CreateProductInput,
   UpdateProductInput,
   type CreateProductVariantInput,
+  type CreateProductVariantUnitInput,
   type Product,
   type UpdateProductVariantInput,
+  type UpdateProductVariantUnitInput,
 } from "../types";
 
 function createEmptyVariant() {
@@ -40,7 +45,7 @@ function createEmptyVariant() {
     name: "",
     sku: "",
     barcode: "",
-    unitName: "",
+    units: [],
     reorderPoint: 0,
     alertThreshold: 0,
   };
@@ -59,7 +64,12 @@ function createDefaults(product?: Product) {
           name: v.name,
           sku: v.sku,
           barcode: v.barcode,
-          unitName: v.unitName,
+          units: (v.units ?? []).map((unit) => ({
+            unitId: unit.unitId,
+            parentUnitId: unit.parentUnitId,
+            factorToParent: unit.factorToParent,
+            isDefault: unit.isDefault,
+          })),
           reorderPoint: v.reorderPoint,
           alertThreshold: v.alertThreshold,
         }))
@@ -75,10 +85,12 @@ export function ProductForm({ productId }: ProductFormProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isEditing = !!productId;
+  const [unitsDialogIndex, setUnitsDialogIndex] = useState<number | null>(null);
 
   const { data: categoriesResult } = useQuery(
     categoryQueries.all({ pageSize: 100, includeArchived: false })
   );
+  const { data: unitsResult } = useQuery(unitQueries.all());
   const { data: product, isLoading } = useQuery({
     ...productQueries.detail(productId ?? ""),
     enabled: isEditing,
@@ -104,7 +116,12 @@ export function ProductForm({ productId }: ProductFormProps) {
               name: v.name,
               sku: v.sku,
               barcode: v.barcode,
-              unitName: v.unitName,
+              units: v.units.map<UpdateProductVariantUnitInput>((unit) => ({
+                unitId: unit.unitId,
+                parentUnitId: unit.parentUnitId,
+                factorToParent: unit.factorToParent,
+                isDefault: unit.isDefault,
+              })),
               reorderPoint: v.reorderPoint,
               alertThreshold: v.alertThreshold,
             })),
@@ -120,14 +137,19 @@ export function ProductForm({ productId }: ProductFormProps) {
           categoryId: value.categoryId,
           brand: value.brand,
           notes: value.notes,
-          variants: value.variants.map<CreateProductVariantInput>((v) => ({
-            name: v.name,
-            sku: v.sku,
-            barcode: v.barcode,
-            unitName: v.unitName,
-            reorderPoint: v.reorderPoint,
-            alertThreshold: v.alertThreshold,
-          })),
+            variants: value.variants.map<CreateProductVariantInput>((v) => ({
+              name: v.name,
+              sku: v.sku,
+              barcode: v.barcode,
+              units: v.units.map<CreateProductVariantUnitInput>((unit) => ({
+                unitId: unit.unitId,
+                parentUnitId: unit.parentUnitId,
+                factorToParent: unit.factorToParent,
+                isDefault: unit.isDefault,
+              })),
+              reorderPoint: v.reorderPoint,
+              alertThreshold: v.alertThreshold,
+            })),
         })
       );
     },
@@ -165,6 +187,9 @@ export function ProductForm({ productId }: ProductFormProps) {
   });
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const availableUnits = unitsResult?.items ?? [];
+  const activeDialogVariant =
+    unitsDialogIndex === null ? null : form.state.values.variants[unitsDialogIndex];
 
   if (isEditing && isLoading) {
     return (
@@ -407,7 +432,7 @@ export function ProductForm({ productId }: ProductFormProps) {
                       <div>
                         <h3 className="font-medium">Variant {index + 1}</h3>
                         <p className="text-xs text-muted-foreground">
-                          Identifiers and thresholds for one sellable option.
+                          Identifiers, thresholds, and unit relations for one sellable option.
                         </p>
                       </div>
                       <Button
@@ -514,27 +539,47 @@ export function ProductForm({ productId }: ProductFormProps) {
                         }}
                       />
                       <form.Field
-                        name={`variants[${index}].unitName`}
+                        name={`variants[${index}].units`}
                         children={(field) => {
                           const isInvalid =
                             field.state.meta.isTouched &&
                             !field.state.meta.isValid;
+                          const summary = summarizeVariantUnits(
+                            field.state.value.map((unit) => ({
+                              ...unit,
+                              unitName:
+                                availableUnits.find(
+                                  (candidate) => candidate.id === unit.unitId
+                                )?.name ?? unit.unitId,
+                            }))
+                          );
+
                           return (
-                            <Field data-invalid={isInvalid}>
-                              <FieldLabel htmlFor={`variant-unit-${index}`}>
-                                Unit Name
-                              </FieldLabel>
-                              <Input
-                                id={`variant-unit-${index}`}
-                                name={field.name}
-                                value={field.state.value}
-                                onBlur={field.handleBlur}
-                                onChange={(e) =>
-                                  field.handleChange(e.target.value)
-                                }
-                                aria-invalid={isInvalid}
-                                placeholder="piece, box, bottle"
-                              />
+                            <Field
+                              data-invalid={isInvalid}
+                              className="md:col-span-2"
+                            >
+                              <div className="flex items-center justify-between gap-3 rounded-xl border bg-muted/30 px-3 py-3">
+                                <div className="space-y-1">
+                                  <FieldLabel>Units</FieldLabel>
+                                  <div className="text-sm text-muted-foreground">
+                                    {summary}
+                                  </div>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => setUnitsDialogIndex(index)}
+                                  disabled={!availableUnits.length}
+                                >
+                                  Manage Units
+                                </Button>
+                              </div>
+                              {!availableUnits.length && (
+                                <div className="text-sm text-muted-foreground">
+                                  Create shared units first from the Units page.
+                                </div>
+                              )}
                               {isInvalid && (
                                 <FieldError errors={field.state.meta.errors} />
                               )}
@@ -619,6 +664,22 @@ export function ProductForm({ productId }: ProductFormProps) {
           />
         </section>
       </form>
+
+      {activeDialogVariant && (
+        <VariantUnitsDialog
+          open={unitsDialogIndex !== null}
+          onOpenChange={(open) => !open && setUnitsDialogIndex(null)}
+          variantName={activeDialogVariant.name}
+          units={availableUnits}
+          value={activeDialogVariant.units}
+          onSave={(value) => {
+            if (unitsDialogIndex === null) {
+              return;
+            }
+            form.setFieldValue(`variants[${unitsDialogIndex}].units`, value);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"github.com/pressly/goose/v3"
+	_ "modernc.org/sqlite"
 )
 
 func NewTestDB(t *testing.T) *sql.DB {
 	t.Helper()
-	db, err := sql.Open("sqlite3", ":memory:")
+	db, err := sql.Open("sqlite", ":memory:")
 	if err != nil {
 		t.Fatalf("open test db: %v", err)
 	}
