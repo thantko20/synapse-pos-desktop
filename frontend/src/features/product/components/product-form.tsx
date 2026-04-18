@@ -301,7 +301,11 @@ export function ProductForm({ productId }: ProductFormProps) {
                         className="w-full"
                         aria-invalid={isInvalid}
                       >
-                        <SelectValue placeholder="Uncategorized" />
+                        <SelectValue placeholder="Uncategorized">
+                          {categoriesResult?.items.find(
+                            (c) => c.id === field.state.value
+                          )?.name ?? "Uncategorized"}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
