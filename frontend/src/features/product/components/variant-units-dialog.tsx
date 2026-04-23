@@ -47,6 +47,17 @@ function createEmptyUnit(): VariantUnitFormValue {
   };
 }
 
+function normalizeBaseUnit(item: VariantUnitFormValue): VariantUnitFormValue {
+  if (item.parentUnitId) {
+    return item;
+  }
+
+  return {
+    ...item,
+    factorToParent: 1,
+  };
+}
+
 export function VariantUnitsDialog({
   open,
   onOpenChange,
@@ -97,12 +108,12 @@ export function VariantUnitsDialog({
           {preview}
         </div>
 
-        <div className="max-h-[360px] overflow-y-auto">
+        <div className="max-h-90 overflow-y-auto">
           <table className="w-full">
             <thead className="sticky top-0 bg-background">
               <tr className="border-b text-xs text-muted-foreground">
                 <th className="pb-2 text-left font-medium">Unit</th>
-                <th className="pb-2 text-left font-medium">Parent</th>
+                <th className="pb-2 text-left font-medium">Smaller Unit</th>
                 <th className="pb-2 w-24 text-left font-medium">Factor</th>
                 <th className="pb-2 w-24 text-center font-medium">Default</th>
                 <th className="pb-2 w-10"></th>
@@ -110,6 +121,7 @@ export function VariantUnitsDialog({
             </thead>
             <tbody>
               {draft.map((item, index) => {
+                const isBaseUnit = !item.parentUnitId;
                 const availableParents = draft.filter(
                   (candidate, candidateIndex) =>
                     candidateIndex !== index && candidate.unitId
@@ -161,21 +173,21 @@ export function VariantUnitsDialog({
                           setDraft((current) =>
                             current.map((currentItem, itemIndex) =>
                               itemIndex === index
-                                ? {
+                                ? normalizeBaseUnit({
                                     ...currentItem,
                                     parentUnitId: parentUnitId ?? "",
-                                  }
+                                  })
                                 : currentItem
                             )
                           );
                         }}
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Base" />
+                          <SelectValue placeholder="Base unit" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
-                            <SelectItem value="">Base unit</SelectItem>
+                            <SelectItem value="">No smaller unit</SelectItem>
                             {availableParents.map((parent) => (
                               <SelectItem
                                 key={parent.unitId}
@@ -193,7 +205,8 @@ export function VariantUnitsDialog({
                       <Input
                         type="number"
                         min={1}
-                        value={item.factorToParent || 1}
+                        value={isBaseUnit ? 1 : item.factorToParent || 1}
+                        disabled={isBaseUnit}
                         onChange={(event) => {
                           const factorToParent = Number(
                             event.target.value || 1
@@ -201,7 +214,10 @@ export function VariantUnitsDialog({
                           setDraft((current) =>
                             current.map((currentItem, itemIndex) =>
                               itemIndex === index
-                                ? { ...currentItem, factorToParent }
+                                ? {
+                                    ...currentItem,
+                                    factorToParent,
+                                  }
                                 : currentItem
                             )
                           );
@@ -276,7 +292,9 @@ export function VariantUnitsDialog({
             <Button
               type="button"
               onClick={() => {
-                const filtered = draft.filter((item) => item.unitId);
+                const filtered = draft
+                  .filter((item) => item.unitId)
+                  .map(normalizeBaseUnit);
                 const validationError = validateVariantUnits(filtered);
                 if (validationError) {
                   setError(validationError);

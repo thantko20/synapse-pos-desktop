@@ -442,6 +442,26 @@ func TestCreateProduct(t *testing.T) {
 		}
 	})
 
+	t.Run("rejects base unit factor other than one", func(t *testing.T) {
+		svc, db := newTestService(t)
+		pieceID := mustUnitID(t, db, "piece")
+
+		_, err := svc.CreateProduct(ctx, CreateProductInput{
+			Name: "Invalid Base Factor",
+			Variants: []CreateProductVariantInput{{
+				Name: "Variant",
+				Units: []CreateProductVariantUnitInput{{
+					UnitID:         pieceID,
+					FactorToParent: 2,
+					IsDefault:      true,
+				}},
+			}},
+		})
+		if err != VariantErrUnitBaseFactor {
+			t.Fatalf("expected VariantErrUnitBaseFactor, got %v", err)
+		}
+	})
+
 	t.Run("rejects unit cycles", func(t *testing.T) {
 		svc, db := newTestService(t)
 		bottleID := mustUnitID(t, db, "bottle")

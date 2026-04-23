@@ -364,6 +364,9 @@ func validateVariantUnitHierarchy(units []CreateProductVariantUnitInput) error {
 			return VariantErrUnitDuplicate
 		}
 		seen[item.UnitID] = item
+		if strings.TrimSpace(item.ParentUnitID) == "" && item.FactorToParent != 1 {
+			return VariantErrUnitBaseFactor
+		}
 		if strings.TrimSpace(item.ParentUnitID) == "" {
 			rootCount++
 		}
