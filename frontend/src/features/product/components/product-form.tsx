@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useForm, useStore } from "@tanstack/react-form";
+import { useMemo, useState } from "react";
+import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeftIcon, PlusIcon, Trash2Icon } from "lucide-react";
@@ -13,14 +13,6 @@ import {
   FieldLabel,
 } from "#/components/ui/field";
 import { Input } from "#/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "#/components/ui/select";
 import { Switch } from "#/components/ui/switch";
 import { Textarea } from "#/components/ui/textarea";
 import { categoryQueries } from "#/features/category";
@@ -36,6 +28,8 @@ import {
   UpdateProductVariantInput,
   type Product,
 } from "../types";
+import { useAppForm } from "#/hooks/form";
+import { ProductVariantsSectionForm } from "./product-variants-section-form";
 
 type FormUnitValue = {
   unitId: string;
@@ -147,7 +141,7 @@ export function ProductForm({ productId }: ProductFormProps) {
 
   const initialValues = useMemo(() => createDefaults(product), [product]);
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: initialValues,
     validators: {
       onSubmit: ProductFormSchema,
@@ -385,109 +379,44 @@ export function ProductForm({ productId }: ProductFormProps) {
               </div>
 
               <FieldGroup>
-                <form.Field
+                <form.AppField
                   name="name"
                   listeners={{
                     onChange: ({ value }) => {
                       onProductNameChange(value);
                     },
                   }}
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field data-invalid={isInvalid} className="md:col-span-2">
-                        <FieldLabel htmlFor="product-name">Name</FieldLabel>
-                        <Input
-                          id="product-name"
-                          name={field.name}
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          aria-invalid={isInvalid}
-                          placeholder="Cold brew concentrate"
-                        />
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
+                  children={(field) => (
+                    <field.TextField
+                      label="Name"
+                      placeholder="Cold brew concentrate"
+                    />
+                  )}
                 />
-                <form.Field
+                <form.AppField
                   name="categoryId"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor="product-category">
-                          Category
-                        </FieldLabel>
-                        <Select
-                          name={field.name}
-                          value={field.state.value}
-                          onValueChange={(value) =>
-                            field.handleChange(value ?? "")
-                          }
-                        >
-                          <SelectTrigger
-                            id="product-category"
-                            className="w-full"
-                            aria-invalid={isInvalid}
-                          >
-                            <SelectValue placeholder="Uncategorized">
-                              {categoriesResult?.items.find(
-                                (c) => c.id === field.state.value
-                              )?.name ?? "Uncategorized"}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectItem value="">Uncategorized</SelectItem>
-                              {(categoriesResult?.items ?? []).map(
-                                (category) => (
-                                  <SelectItem
-                                    key={category.id}
-                                    value={category.id}
-                                  >
-                                    {category.name}
-                                  </SelectItem>
-                                )
-                              )}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
+                  children={(field) => (
+                    <field.SelectField
+                      label="Category"
+                      placeholder="Uncategorized"
+                      options={[
+                        { value: "", label: "Uncategorized" },
+                        ...(categoriesResult?.items ?? []).map((c) => ({
+                          value: c.id,
+                          label: c.name,
+                        })),
+                      ]}
+                    />
+                  )}
                 />
-                <form.Field
+                <form.AppField
                   name="brand"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor="product-brand">Brand</FieldLabel>
-                        <Input
-                          id="product-brand"
-                          name={field.name}
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          aria-invalid={isInvalid}
-                          placeholder="Optional brand"
-                        />
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
+                  children={(field) => (
+                    <field.TextField
+                      label="Brand"
+                      placeholder="Optional brand"
+                    />
+                  )}
                 />
                 <form.Field
                   name="description"
@@ -560,61 +489,23 @@ export function ProductForm({ productId }: ProductFormProps) {
 
                   <FieldGroup>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <form.Field
+                      <form.AppField
                         name="variants[0].sku"
-                        children={(field) => {
-                          const isInvalid =
-                            field.state.meta.isTouched &&
-                            !field.state.meta.isValid;
-                          return (
-                            <Field data-invalid={isInvalid}>
-                              <FieldLabel htmlFor="simple-sku">SKU</FieldLabel>
-                              <Input
-                                id="simple-sku"
-                                name={field.name}
-                                value={field.state.value}
-                                onBlur={field.handleBlur}
-                                onChange={(e) =>
-                                  field.handleChange(e.target.value)
-                                }
-                                aria-invalid={isInvalid}
-                                placeholder="Optional unique SKU"
-                              />
-                              {isInvalid && (
-                                <FieldError errors={field.state.meta.errors} />
-                              )}
-                            </Field>
-                          );
-                        }}
+                        children={(field) => (
+                          <field.TextField
+                            label="SKU"
+                            placeholder="Optional unique SKU"
+                          />
+                        )}
                       />
-                      <form.Field
+                      <form.AppField
                         name="variants[0].barcode"
-                        children={(field) => {
-                          const isInvalid =
-                            field.state.meta.isTouched &&
-                            !field.state.meta.isValid;
-                          return (
-                            <Field data-invalid={isInvalid}>
-                              <FieldLabel htmlFor="simple-barcode">
-                                Barcode
-                              </FieldLabel>
-                              <Input
-                                id="simple-barcode"
-                                name={field.name}
-                                value={field.state.value}
-                                onBlur={field.handleBlur}
-                                onChange={(e) =>
-                                  field.handleChange(e.target.value)
-                                }
-                                aria-invalid={isInvalid}
-                                placeholder="Optional unique barcode"
-                              />
-                              {isInvalid && (
-                                <FieldError errors={field.state.meta.errors} />
-                              )}
-                            </Field>
-                          );
-                        }}
+                        children={(field) => (
+                          <field.TextField
+                            label="Barcode"
+                            placeholder="Optional unique barcode"
+                          />
+                        )}
                       />
                       <form.Field
                         name="variants[0].reorderPoint"
@@ -737,55 +628,24 @@ export function ProductForm({ productId }: ProductFormProps) {
                         }}
                       />
                     ) : (
-                      <form.Field
+                      <form.AppField
                         name="variants[0].units"
-                        children={(field) => {
-                          const isInvalid =
-                            field.state.meta.isTouched &&
-                            !field.state.meta.isValid;
-                          const unitId = extractSingleUnitId(field.state.value);
-
-                          return (
-                            <Field data-invalid={isInvalid}>
-                              <FieldLabel htmlFor="simple-unit">
-                                Unit
-                              </FieldLabel>
-                              <Select
-                                name={field.name}
-                                value={unitId}
-                                onValueChange={(value) =>
-                                  field.handleChange(
-                                    createSingleUnitArray(value ?? "")
-                                  )
-                                }
-                              >
-                                <SelectTrigger
-                                  id="simple-unit"
-                                  className="w-full"
-                                  aria-invalid={isInvalid}
-                                >
-                                  <SelectValue placeholder="Select unit">
-                                    {availableUnits.find((u) => u.id === unitId)
-                                      ?.name ?? "Select unit"}
-                                  </SelectValue>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectGroup>
-                                    {(availableUnits ?? []).map((unit) => (
-                                      <SelectItem key={unit.id} value={unit.id}>
-                                        {unit.name}
-                                        {unit.symbol ? ` (${unit.symbol})` : ""}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectGroup>
-                                </SelectContent>
-                              </Select>
-                              {isInvalid && (
-                                <FieldError errors={field.state.meta.errors} />
-                              )}
-                            </Field>
-                          );
-                        }}
+                        children={(field) => (
+                          <field.SelectField
+                            label="Unit"
+                            placeholder="Select unit"
+                            getValue={(value) =>
+                              extractSingleUnitId(value as FormUnitValue[])
+                            }
+                            setValue={(value) => createSingleUnitArray(value)}
+                            options={(availableUnits ?? []).map((u) => ({
+                              value: u.id,
+                              label: u.symbol
+                                ? `${u.name} (${u.symbol})`
+                                : u.name,
+                            }))}
+                          />
+                        )}
                       />
                     )}
                   </FieldGroup>
@@ -843,107 +703,34 @@ export function ProductForm({ productId }: ProductFormProps) {
                             </div>
 
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                              <form.Field
-                                name={`variants[${index}].name`}
-                                children={(field) => {
-                                  const isInvalid =
-                                    field.state.meta.isTouched &&
-                                    !field.state.meta.isValid;
-                                  return (
-                                    <Field
-                                      data-invalid={isInvalid}
-                                      className="md:col-span-2"
-                                    >
-                                      <FieldLabel
-                                        htmlFor={`variant-name-${index}`}
-                                      >
-                                        Variant Name
-                                      </FieldLabel>
-                                      <Input
-                                        id={`variant-name-${index}`}
-                                        name={field.name}
-                                        value={field.state.value}
-                                        onBlur={field.handleBlur}
-                                        onChange={(e) =>
-                                          field.handleChange(e.target.value)
-                                        }
-                                        aria-invalid={isInvalid}
-                                        placeholder="Default, Large, Bottle, Box of 12"
-                                      />
-                                      {isInvalid && (
-                                        <FieldError
-                                          errors={field.state.meta.errors}
-                                        />
-                                      )}
-                                    </Field>
-                                  );
-                                }}
-                              />
-                              <form.Field
+                              <div className="md:col-span-2">
+                                <form.AppField
+                                  name={`variants[${index}].name`}
+                                  children={(field) => (
+                                    <field.TextField
+                                      label="Variant Name"
+                                      placeholder="Default, Large, Bottle, Box of 12"
+                                    />
+                                  )}
+                                />
+                              </div>
+                              <form.AppField
                                 name={`variants[${index}].sku`}
-                                children={(field) => {
-                                  const isInvalid =
-                                    field.state.meta.isTouched &&
-                                    !field.state.meta.isValid;
-                                  return (
-                                    <Field data-invalid={isInvalid}>
-                                      <FieldLabel
-                                        htmlFor={`variant-sku-${index}`}
-                                      >
-                                        SKU
-                                      </FieldLabel>
-                                      <Input
-                                        id={`variant-sku-${index}`}
-                                        name={field.name}
-                                        value={field.state.value}
-                                        onBlur={field.handleBlur}
-                                        onChange={(e) =>
-                                          field.handleChange(e.target.value)
-                                        }
-                                        aria-invalid={isInvalid}
-                                        placeholder="Optional unique SKU"
-                                      />
-                                      {isInvalid && (
-                                        <FieldError
-                                          errors={field.state.meta.errors}
-                                        />
-                                      )}
-                                    </Field>
-                                  );
-                                }}
+                                children={(field) => (
+                                  <field.TextField
+                                    label="SKU"
+                                    placeholder="Optional unique SKU"
+                                  />
+                                )}
                               />
-                              <form.Field
+                              <form.AppField
                                 name={`variants[${index}].barcode`}
-                                children={(field) => {
-                                  const isInvalid =
-                                    field.state.meta.isTouched &&
-                                    !field.state.meta.isValid;
-                                  return (
-                                    <Field data-invalid={isInvalid}>
-                                      <FieldLabel
-                                        htmlFor={`variant-barcode-${index}`}
-                                      >
-                                        Barcode
-                                      </FieldLabel>
-                                      <Input
-                                        id={`variant-barcode-${index}`}
-                                        name={field.name}
-                                        value={field.state.value}
-                                        onBlur={field.handleBlur}
-                                        onChange={(e) =>
-                                          field.handleChange(e.target.value)
-                                        }
-                                        aria-invalid={isInvalid}
-                                        placeholder="Optional unique barcode"
-                                      />
-                                      {isInvalid && (
-                                        <FieldError
-                                          errors={field.state.meta.errors}
-                                        />
-                                      )}
-                                    </Field>
-                                  );
-                                }}
+                                children={(field) => (
+                                  <field.TextField
+                                    label="Barcode"
+                                    placeholder="Optional unique barcode"
+                                  />
+                                )}
                               />
                               <form.Field
                                 name={`variants[${index}].reorderPoint`}
@@ -1077,69 +864,30 @@ export function ProductForm({ productId }: ProductFormProps) {
                                   }}
                                 />
                               ) : (
-                                <form.Field
+                                <form.AppField
                                   name={`variants[${index}].units`}
-                                  children={(field) => {
-                                    const isInvalid =
-                                      field.state.meta.isTouched &&
-                                      !field.state.meta.isValid;
-                                    const unitId = extractSingleUnitId(
-                                      field.state.value
-                                    );
-
-                                    return (
-                                      <Field data-invalid={isInvalid}>
-                                        <FieldLabel
-                                          htmlFor={`variant-unit-${index}`}
-                                        >
-                                          Unit
-                                        </FieldLabel>
-                                        <Select
-                                          name={field.name}
-                                          value={unitId}
-                                          onValueChange={(value) =>
-                                            field.handleChange(
-                                              createSingleUnitArray(value ?? "")
-                                            )
-                                          }
-                                        >
-                                          <SelectTrigger
-                                            id={`variant-unit-${index}`}
-                                            className="w-full"
-                                            aria-invalid={isInvalid}
-                                          >
-                                            <SelectValue placeholder="Select unit">
-                                              {availableUnits.find(
-                                                (u) => u.id === unitId
-                                              )?.name ?? "Select unit"}
-                                            </SelectValue>
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectGroup>
-                                              {(availableUnits ?? []).map(
-                                                (unit) => (
-                                                  <SelectItem
-                                                    key={unit.id}
-                                                    value={unit.id}
-                                                  >
-                                                    {unit.name}
-                                                    {unit.symbol
-                                                      ? ` (${unit.symbol})`
-                                                      : ""}
-                                                  </SelectItem>
-                                                )
-                                              )}
-                                            </SelectGroup>
-                                          </SelectContent>
-                                        </Select>
-                                        {isInvalid && (
-                                          <FieldError
-                                            errors={field.state.meta.errors}
-                                          />
-                                        )}
-                                      </Field>
-                                    );
-                                  }}
+                                  children={(field) => (
+                                    <field.SelectField
+                                      label="Unit"
+                                      placeholder="Select unit"
+                                      getValue={(value) =>
+                                        extractSingleUnitId(
+                                          value as FormUnitValue[]
+                                        )
+                                      }
+                                      setValue={(value) =>
+                                        createSingleUnitArray(value)
+                                      }
+                                      options={(availableUnits ?? []).map(
+                                        (u) => ({
+                                          value: u.id,
+                                          label: u.symbol
+                                            ? `${u.name} (${u.symbol})`
+                                            : u.name,
+                                        })
+                                      )}
+                                    />
+                                  )}
                                 />
                               )}
                             </div>
