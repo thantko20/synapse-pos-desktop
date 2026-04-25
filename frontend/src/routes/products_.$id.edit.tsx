@@ -7,5 +7,6 @@ export const Route = createFileRoute("/products_/$id/edit")({
 
 function EditProductPage() {
   const { id } = Route.useParams()
-  return <ProductForm productId={id} />
+  // Key forces remount when productId changes, ensuring form gets fresh defaultValues
+  return <ProductForm key={id} productId={id} />
 }

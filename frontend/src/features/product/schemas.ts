@@ -29,6 +29,8 @@ export const ProductFormSchema = v.object({
   categoryId: v.string(),
   brand: v.string(),
   notes: v.string(),
+  hasVariants: v.boolean(),
+  hasMultipleUnits: v.boolean(),
   variants: v.pipe(
     v.array(ProductVariantFormSchema),
     v.minLength(1, "At least one variant is required.")
