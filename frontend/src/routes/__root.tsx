@@ -21,6 +21,7 @@ import {
   LayoutGridIcon,
   PackageIcon,
   RulerIcon,
+  WarehouseIcon,
 } from "lucide-react";
 
 import "../styles.css";
@@ -29,6 +30,7 @@ const navItems = [
   { title: "Dashboard", href: "/", icon: LayoutGridIcon },
   { title: "Categories", href: "/categories", icon: PackageIcon },
   { title: "Products", href: "/products", icon: BoxesIcon },
+  { title: "Inventory", href: "/inventory", icon: WarehouseIcon },
   { title: "Units", href: "/units", icon: RulerIcon },
 ];
 

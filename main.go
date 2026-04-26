@@ -7,6 +7,7 @@ import (
 
 	"synapse-pos-desktop/internal/category"
 	"synapse-pos-desktop/internal/database"
+	"synapse-pos-desktop/internal/inventory"
 	"synapse-pos-desktop/internal/product"
 	"synapse-pos-desktop/internal/unit"
 
@@ -30,6 +31,7 @@ func main() {
 	categoryApi := category.NewCategoryApi(db)
 	productApi := product.NewProductApi(db)
 	unitApi := unit.NewUnitApi(db)
+	inventoryApi := inventory.NewInventoryApi(db)
 
 	err = wails.Run(&options.App{
 		Title:  "synapse-pos-desktop",
@@ -44,12 +46,14 @@ func main() {
 			categoryApi.SetContext(ctx)
 			productApi.SetContext(ctx)
 			unitApi.SetContext(ctx)
+			inventoryApi.SetContext(ctx)
 		},
 		Bind: []interface{}{
 			app,
 			categoryApi,
 			productApi,
 			unitApi,
+			inventoryApi,
 		},
 	})
 
