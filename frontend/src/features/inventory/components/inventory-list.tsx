@@ -58,10 +58,7 @@ export function InventoryList() {
     : 1;
 
   const movementTotalPages = movementsResult
-    ? Math.max(
-        1,
-        Math.ceil(movementsResult.total / movementsResult.pageSize),
-      )
+    ? Math.max(1, Math.ceil(movementsResult.total / movementsResult.pageSize))
     : 1;
 
   function handleViewMovements(variant: LowStockVariant) {

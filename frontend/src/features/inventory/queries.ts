@@ -6,7 +6,8 @@ export const inventoryQueries = {
   balance: (variantId: string) =>
     queryOptions({
       queryKey: ["inventory", "balance", variantId],
-      queryFn: () => inventoryApi.getInventoryBalance({ productVariantId: variantId }),
+      queryFn: () =>
+        inventoryApi.getInventoryBalance({ productVariantId: variantId }),
       enabled: !!variantId,
     }),
 
@@ -17,7 +18,9 @@ export const inventoryQueries = {
       enabled: !!productId,
     }),
 
-  movements: (input: Partial<GetMovementsInput> & { productVariantId: string }) =>
+  movements: (
+    input: Partial<GetMovementsInput> & { productVariantId: string },
+  ) =>
     queryOptions({
       queryKey: ["inventory", "movements", input],
       queryFn: () =>
@@ -30,7 +33,9 @@ export const inventoryQueries = {
       enabled: !!input.productVariantId,
     }),
 
-  movementsByProduct: (input: Partial<GetMovementsInput> & { productId: string }) =>
+  movementsByProduct: (
+    input: Partial<GetMovementsInput> & { productId: string },
+  ) =>
     queryOptions({
       queryKey: ["inventory", "movements", "product", input],
       queryFn: () =>

@@ -45,7 +45,9 @@ export function getLowStockColumns(): ColumnDef<LowStockVariant>[] {
         const qty = row.original.quantity;
         const reorder = row.original.reorderPoint;
         return (
-          <span className={qty <= reorder ? "text-destructive font-medium" : ""}>
+          <span
+            className={qty <= reorder ? "text-destructive font-medium" : ""}
+          >
             {qty}
           </span>
         );

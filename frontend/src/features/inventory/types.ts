@@ -7,5 +7,7 @@ export type GetMovementsResult = inventory.GetMovementsResult;
 export type GetLowStockResult = inventory.GetLowStockResult;
 export class GetMovementsInput extends inventory.GetMovementsInput {}
 export class GetLowStockInput extends inventory.GetLowStockInput {}
-export class GetInventoryBalanceInput extends inventory.GetInventoryBalanceInput {}
-export class GetBalancesByProductIDInput extends inventory.GetBalancesByProductIDInput {}
+export class GetInventoryBalanceInput
+  extends inventory.GetInventoryBalanceInput {}
+export class GetBalancesByProductIDInput
+  extends inventory.GetBalancesByProductIDInput {}

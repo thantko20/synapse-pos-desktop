@@ -1,8 +1,5 @@
 import type { ReactNode } from "react";
-import {
-  flexRender,
-  type Table as TanStackTable,
-} from "@tanstack/react-table";
+import { flexRender, type Table as TanStackTable } from "@tanstack/react-table";
 import { Button } from "#/components/ui/button";
 import {
   Table,
@@ -70,7 +67,9 @@ export function DataTable<TData>({
                   <TableRow
                     key={row.id}
                     className={onRowClick ? "cursor-pointer" : undefined}
-                    onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                    onClick={
+                      onRowClick ? () => onRowClick(row.original) : undefined
+                    }
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
