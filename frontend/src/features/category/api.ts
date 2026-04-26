@@ -4,7 +4,7 @@ import {
   CreateCategory,
   UpdateCategory,
   ArchiveCategory,
-} from "../../../wailsjs/go/category/CategoryApi"
+} from "../../../wailsjs/go/category/CategoryApi";
 
 export const categoryApi = {
   getAllCategories: GetAllCategories,
@@ -12,4 +12,4 @@ export const categoryApi = {
   createCategory: CreateCategory,
   updateCategory: UpdateCategory,
   archiveCategory: ArchiveCategory,
-}
+};

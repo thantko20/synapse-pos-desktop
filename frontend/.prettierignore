@@ -1,0 +1,9 @@
+src/routeTree.gen.ts
+
+wailsjs
+
+node_modules
+
+dist
+
+.tanstack

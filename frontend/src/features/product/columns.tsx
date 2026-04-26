@@ -1,6 +1,6 @@
-import type { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDownIcon, MoreHorizontalIcon } from "lucide-react"
-import { Button } from "#/components/ui/button"
+import type { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDownIcon, MoreHorizontalIcon } from "lucide-react";
+import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,12 +8,12 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu"
-import type { Product } from "./types"
+} from "#/components/ui/dropdown-menu";
+import type { Product } from "./types";
 
 interface ColumnContext {
-  onEdit: (product: Product) => void
-  onArchive: (product: Product) => void
+  onEdit: (product: Product) => void;
+  onArchive: (product: Product) => void;
 }
 
 export function getProductColumns(ctx: ColumnContext): ColumnDef<Product>[] {
@@ -63,7 +63,7 @@ export function getProductColumns(ctx: ColumnContext): ColumnDef<Product>[] {
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
-        const product = row.original
+        const product = row.original;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -89,8 +89,8 @@ export function getProductColumns(ctx: ColumnContext): ColumnDef<Product>[] {
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
-        )
+        );
       },
     },
-  ]
+  ];
 }

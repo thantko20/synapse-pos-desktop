@@ -4,7 +4,7 @@ import {
   GetAllProducts,
   GetProductById,
   UpdateProduct,
-} from "../../../wailsjs/go/product/ProductApi"
+} from "../../../wailsjs/go/product/ProductApi";
 
 export const productApi = {
   getAllProducts: GetAllProducts,
@@ -12,4 +12,4 @@ export const productApi = {
   createProduct: CreateProduct,
   updateProduct: UpdateProduct,
   archiveProduct: ArchiveProduct,
-}
+};

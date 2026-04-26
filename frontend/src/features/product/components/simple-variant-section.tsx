@@ -153,16 +153,13 @@ export const SimpleVariantSection = withForm({
                         ...unit,
                         unitName:
                           availableUnits.find(
-                            (candidate) => candidate.id === unit.unitId
+                            (candidate) => candidate.id === unit.unitId,
                           )?.name ?? unit.unitId,
-                      }))
+                      })),
                     );
 
                     return (
-                      <Field
-                        data-invalid={isInvalid}
-                        className="md:col-span-2"
-                      >
+                      <Field data-invalid={isInvalid} className="md:col-span-2">
                         <div className="flex items-center justify-between gap-3">
                           <div className="space-y-1">
                             <FieldLabel>Units</FieldLabel>
@@ -205,9 +202,7 @@ export const SimpleVariantSection = withForm({
                       setValue={(value) => createSingleUnitArray(value)}
                       options={availableUnits.map((u) => ({
                         value: u.id,
-                        label: u.symbol
-                          ? `${u.name} (${u.symbol})`
-                          : u.name,
+                        label: u.symbol ? `${u.name} (${u.symbol})` : u.name,
                       }))}
                     />
                   )}

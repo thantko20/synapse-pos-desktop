@@ -38,7 +38,7 @@ export function CategoryList() {
   const [archiveCategory, setArchiveCategory] = useState<Category | null>(null);
 
   const { data: result, isLoading } = useQuery(
-    categoryQueries.all({ includeArchived: showArchived })
+    categoryQueries.all({ includeArchived: showArchived }),
   );
 
   const createMutation = useMutation({
@@ -83,7 +83,7 @@ export function CategoryList() {
         onEdit: (category) => setEditCategory(category),
         onArchive: (category) => setArchiveCategory(category),
       }),
-    []
+    [],
   );
 
   const categories = result?.items ?? [];
@@ -146,7 +146,7 @@ export function CategoryList() {
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
                   ))}
@@ -161,7 +161,7 @@ export function CategoryList() {
                       <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </TableCell>
                     ))}

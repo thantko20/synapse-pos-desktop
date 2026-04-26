@@ -44,7 +44,7 @@ export function ProductList() {
       pageSize: 10,
       includeArchived: showArchived,
       query: deferredQuery,
-    })
+    }),
   );
 
   const archiveMutation = useMutation({
@@ -66,7 +66,7 @@ export function ProductList() {
           navigate({ to: "/products/$id/edit", params: { id: product.id } }),
         onArchive: (product) => setArchiveProduct(product),
       }),
-    [navigate]
+    [navigate],
   );
 
   const products = result?.items ?? [];
@@ -145,7 +145,7 @@ export function ProductList() {
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
                   ))}
@@ -160,7 +160,7 @@ export function ProductList() {
                       <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </TableCell>
                     ))}

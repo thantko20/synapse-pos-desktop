@@ -1,14 +1,14 @@
-import { useMemo, useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-import { PlusIcon } from "lucide-react"
-import { toast } from "sonner"
+} from "@tanstack/react-table";
+import { PlusIcon } from "lucide-react";
+import { toast } from "sonner";
 
-import { Button } from "#/components/ui/button"
+import { Button } from "#/components/ui/button";
 import {
   Table,
   TableBody,
@@ -16,54 +16,54 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "#/components/ui/table"
-import { getUnitColumns } from "../columns"
-import { unitApi } from "../api"
-import { unitQueries } from "../queries"
-import type { Unit } from "../types"
-import { UnitFormDialog } from "./unit-form-dialog"
+} from "#/components/ui/table";
+import { getUnitColumns } from "../columns";
+import { unitApi } from "../api";
+import { unitQueries } from "../queries";
+import type { Unit } from "../types";
+import { UnitFormDialog } from "./unit-form-dialog";
 
 export function UnitList() {
-  const queryClient = useQueryClient()
-  const [createOpen, setCreateOpen] = useState(false)
-  const [editUnit, setEditUnit] = useState<Unit | null>(null)
+  const queryClient = useQueryClient();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editUnit, setEditUnit] = useState<Unit | null>(null);
 
-  const { data: result, isLoading } = useQuery(unitQueries.all())
+  const { data: result, isLoading } = useQuery(unitQueries.all());
 
   const createMutation = useMutation({
     mutationFn: unitApi.createUnit,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["units"] })
-      toast.success("Unit created")
-      setCreateOpen(false)
+      await queryClient.invalidateQueries({ queryKey: ["units"] });
+      toast.success("Unit created");
+      setCreateOpen(false);
     },
     onError: (error) => {
-      toast.error(error.message)
+      toast.error(error.message);
     },
-  })
+  });
 
   const updateMutation = useMutation({
     mutationFn: unitApi.updateUnit,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["units"] })
-      toast.success("Unit updated")
-      setEditUnit(null)
+      await queryClient.invalidateQueries({ queryKey: ["units"] });
+      toast.success("Unit updated");
+      setEditUnit(null);
     },
     onError: (error) => {
-      toast.error(error.message)
+      toast.error(error.message);
     },
-  })
+  });
 
   const columns = useMemo(
     () => getUnitColumns({ onEdit: (unit) => setEditUnit(unit) }),
-    []
-  )
+    [],
+  );
 
   const table = useReactTable({
     data: result?.items ?? [],
     columns,
     getCoreRowModel: getCoreRowModel(),
-  })
+  });
 
   return (
     <div className="flex flex-col gap-4">
@@ -93,7 +93,10 @@ export function UnitList() {
                     <TableHead key={header.id}>
                       {header.isPlaceholder
                         ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -105,14 +108,20 @@ export function UnitList() {
                   <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
                       </TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
                     No units found.
                   </TableCell>
                 </TableRow>
@@ -133,9 +142,11 @@ export function UnitList() {
         open={!!editUnit}
         onOpenChange={(open) => !open && setEditUnit(null)}
         unit={editUnit}
-        onSubmit={(value) => editUnit && updateMutation.mutate({ id: editUnit.id, ...value })}
+        onSubmit={(value) =>
+          editUnit && updateMutation.mutate({ id: editUnit.id, ...value })
+        }
         isPending={updateMutation.isPending}
       />
     </div>
-  )
+  );
 }

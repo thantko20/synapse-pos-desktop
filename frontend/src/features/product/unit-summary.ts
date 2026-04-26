@@ -34,14 +34,14 @@ export function summarizeVariantUnits(units: VariantUnitLike[]): string {
   let current = root;
   while (true) {
     const children = (byParent.get(current.unitId) ?? []).filter(
-      (item) => !visited.has(item.unitId)
+      (item) => !visited.has(item.unitId),
     );
     if (!children.length) {
       break;
     }
 
     const next = children.sort(
-      (a, b) => a.factorToParent - b.factorToParent
+      (a, b) => a.factorToParent - b.factorToParent,
     )[0];
     visited.add(next.unitId);
     parts.push(`${next.unitName ?? next.unitId} x${next.factorToParent}`);
@@ -65,7 +65,7 @@ export function validateVariantUnits(
     parentUnitId: string;
     factorToParent: number;
     isDefault: boolean;
-  }>
+  }>,
 ): string | null {
   if (!units.length) {
     return "Each variant needs at least one unit.";

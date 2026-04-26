@@ -16,7 +16,12 @@ import {
   SidebarTrigger,
 } from "#/components/ui/sidebar";
 import { Separator } from "#/components/ui/separator";
-import { BoxesIcon, LayoutGridIcon, PackageIcon, RulerIcon } from "lucide-react";
+import {
+  BoxesIcon,
+  LayoutGridIcon,
+  PackageIcon,
+  RulerIcon,
+} from "lucide-react";
 
 import "../styles.css";
 

@@ -1,6 +1,6 @@
-import { queryOptions } from "@tanstack/react-query"
-import { categoryApi } from "./api"
-import type { GetAllCategoriesInput } from "./types"
+import { queryOptions } from "@tanstack/react-query";
+import { categoryApi } from "./api";
+import type { GetAllCategoriesInput } from "./types";
 
 export const categoryQueries = {
   all: (input?: Partial<GetAllCategoriesInput>) =>
@@ -19,4 +19,4 @@ export const categoryQueries = {
       queryKey: ["categories", id],
       queryFn: () => categoryApi.getCategoryById({ id }),
     }),
-}
+};

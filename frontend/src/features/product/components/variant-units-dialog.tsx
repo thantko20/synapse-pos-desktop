@@ -78,7 +78,7 @@ export function VariantUnitsDialog({
 
   const unitNameById = useMemo(
     () => new Map(units.map((unit) => [unit.id, unit.name])),
-    [units]
+    [units],
   );
 
   const preview = summarizeVariantUnits(
@@ -87,7 +87,7 @@ export function VariantUnitsDialog({
       .map((item) => ({
         ...item,
         unitName: unitNameById.get(item.unitId) ?? item.unitId,
-      }))
+      })),
   );
 
   return (
@@ -124,7 +124,7 @@ export function VariantUnitsDialog({
                 const isBaseUnit = !item.parentUnitId;
                 const availableParents = draft.filter(
                   (candidate, candidateIndex) =>
-                    candidateIndex !== index && candidate.unitId
+                    candidateIndex !== index && candidate.unitId,
                 );
 
                 return (
@@ -144,8 +144,8 @@ export function VariantUnitsDialog({
                                         ? ""
                                         : currentItem.parentUnitId,
                                   }
-                                : currentItem
-                            )
+                                : currentItem,
+                            ),
                           );
                         }}
                       >
@@ -177,8 +177,8 @@ export function VariantUnitsDialog({
                                     ...currentItem,
                                     parentUnitId: parentUnitId ?? "",
                                   })
-                                : currentItem
-                            )
+                                : currentItem,
+                            ),
                           );
                         }}
                       >
@@ -209,7 +209,7 @@ export function VariantUnitsDialog({
                         disabled={isBaseUnit}
                         onChange={(event) => {
                           const factorToParent = Number(
-                            event.target.value || 1
+                            event.target.value || 1,
                           );
                           setDraft((current) =>
                             current.map((currentItem, itemIndex) =>
@@ -218,8 +218,8 @@ export function VariantUnitsDialog({
                                     ...currentItem,
                                     factorToParent,
                                   }
-                                : currentItem
-                            )
+                                : currentItem,
+                            ),
                           );
                         }}
                         className="w-20"
@@ -235,7 +235,7 @@ export function VariantUnitsDialog({
                             current.map((currentItem, itemIndex) => ({
                               ...currentItem,
                               isDefault: itemIndex === index,
-                            }))
+                            })),
                           );
                         }}
                       >
@@ -251,8 +251,8 @@ export function VariantUnitsDialog({
                         onClick={() => {
                           setDraft((current) =>
                             current.filter(
-                              (_, itemIndex) => itemIndex !== index
-                            )
+                              (_, itemIndex) => itemIndex !== index,
+                            ),
                           );
                         }}
                       >

@@ -54,20 +54,14 @@ export const ProductDetailsSection = withForm({
               <field.SelectField
                 label="Category"
                 placeholder="Uncategorized"
-                options={[
-                  { value: "", label: "Uncategorized" },
-                  ...categories,
-                ]}
+                options={[{ value: "", label: "Uncategorized" }, ...categories]}
               />
             )}
           />
           <form.AppField
             name="brand"
             children={(field) => (
-              <field.TextField
-                label="Brand"
-                placeholder="Optional brand"
-              />
+              <field.TextField label="Brand" placeholder="Optional brand" />
             )}
           />
           <form.Field
@@ -90,9 +84,7 @@ export const ProductDetailsSection = withForm({
                     placeholder="Customer-facing description"
                     className="min-h-20"
                   />
-                  {isInvalid && (
-                    <FieldError errors={field.state.meta.errors} />
-                  )}
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );
             }}
@@ -115,9 +107,7 @@ export const ProductDetailsSection = withForm({
                     placeholder="Internal notes for staff"
                     className="min-h-20"
                   />
-                  {isInvalid && (
-                    <FieldError errors={field.state.meta.errors} />
-                  )}
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );
             }}

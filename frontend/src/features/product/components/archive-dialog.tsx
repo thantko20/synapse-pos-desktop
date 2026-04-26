@@ -7,14 +7,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "#/components/ui/alert-dialog"
+} from "#/components/ui/alert-dialog";
 
 interface ArchiveDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  productName: string
-  onConfirm: () => void
-  isPending: boolean
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  productName: string;
+  onConfirm: () => void;
+  isPending: boolean;
 }
 
 export function ArchiveDialog({
@@ -42,5 +42,5 @@ export function ArchiveDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

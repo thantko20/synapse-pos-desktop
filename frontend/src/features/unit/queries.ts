@@ -1,6 +1,6 @@
-import { queryOptions } from "@tanstack/react-query"
-import { unitApi } from "./api"
-import type { GetAllUnitsInput } from "./types"
+import { queryOptions } from "@tanstack/react-query";
+import { unitApi } from "./api";
+import type { GetAllUnitsInput } from "./types";
 
 export const unitQueries = {
   all: (input?: Partial<GetAllUnitsInput>) =>
@@ -13,4 +13,4 @@ export const unitQueries = {
           includeArchived: input?.includeArchived ?? false,
         }),
     }),
-}
+};

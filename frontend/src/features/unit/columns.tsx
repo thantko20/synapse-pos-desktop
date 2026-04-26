@@ -1,6 +1,6 @@
-import type { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontalIcon } from "lucide-react"
-import { Button } from "#/components/ui/button"
+import type { ColumnDef } from "@tanstack/react-table";
+import { MoreHorizontalIcon } from "lucide-react";
+import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,11 +8,11 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu"
-import type { Unit } from "./types"
+} from "#/components/ui/dropdown-menu";
+import type { Unit } from "./types";
 
 interface ColumnContext {
-  onEdit: (unit: Unit) => void
+  onEdit: (unit: Unit) => void;
 }
 
 export function getUnitColumns(ctx: ColumnContext): ColumnDef<Unit>[] {
@@ -56,5 +56,5 @@ export function getUnitColumns(ctx: ColumnContext): ColumnDef<Unit>[] {
         </DropdownMenu>
       ),
     },
-  ]
+  ];
 }

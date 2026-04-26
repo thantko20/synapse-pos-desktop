@@ -23,10 +23,18 @@ export type SelectFieldProps = {
   readonly setValue?: (value: string) => unknown;
 };
 
-export const SelectField = ({ label, placeholder, options, getValue, setValue }: SelectFieldProps) => {
+export const SelectField = ({
+  label,
+  placeholder,
+  options,
+  getValue,
+  setValue,
+}: SelectFieldProps) => {
   const field = useFieldContext<unknown>();
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
-  const currentValue = getValue ? getValue(field.state.value) : (field.state.value as string);
+  const currentValue = getValue
+    ? getValue(field.state.value)
+    : (field.state.value as string);
   const selectedLabel = options.find((o) => o.value === currentValue)?.label;
 
   return (
@@ -45,9 +53,7 @@ export const SelectField = ({ label, placeholder, options, getValue, setValue }:
           className="w-full"
           aria-invalid={isInvalid}
         >
-          <SelectValue placeholder={placeholder}>
-            {selectedLabel}
-          </SelectValue>
+          <SelectValue placeholder={placeholder}>{selectedLabel}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>

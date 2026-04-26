@@ -2,11 +2,7 @@ import { PlusIcon, Trash2Icon } from "lucide-react";
 
 import { withForm } from "#/hooks/form";
 import { Button } from "#/components/ui/button";
-import {
-  Field,
-  FieldError,
-  FieldLabel,
-} from "#/components/ui/field";
+import { Field, FieldError, FieldLabel } from "#/components/ui/field";
 import { Input } from "#/components/ui/input";
 import type { ProductFormValues } from "../schemas";
 import { summarizeVariantUnits } from "../unit-summary";
@@ -86,10 +82,7 @@ export const AdvancedVariantsSection = withForm({
           children={(variantsField) => (
             <div className="flex flex-col divide-y">
               {variantsField.state.value.map((_, index) => (
-                <div
-                  key={index}
-                  className="py-5 first:pt-0 last:pb-0"
-                >
+                <div key={index} className="py-5 first:pt-0 last:pb-0">
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <h3 className="text-sm font-medium text-muted-foreground">
                       Variant {index + 1}
@@ -155,17 +148,13 @@ export const AdvancedVariantsSection = withForm({
                               value={field.state.value || ""}
                               onBlur={field.handleBlur}
                               onChange={(e) =>
-                                field.handleChange(
-                                  Number(e.target.value || 0)
-                                )
+                                field.handleChange(Number(e.target.value || 0))
                               }
                               aria-invalid={isInvalid}
                               placeholder="Optional"
                             />
                             {isInvalid && (
-                              <FieldError
-                                errors={field.state.meta.errors}
-                              />
+                              <FieldError errors={field.state.meta.errors} />
                             )}
                           </Field>
                         );
@@ -190,17 +179,13 @@ export const AdvancedVariantsSection = withForm({
                               value={field.state.value || ""}
                               onBlur={field.handleBlur}
                               onChange={(e) =>
-                                field.handleChange(
-                                  Number(e.target.value || 0)
-                                )
+                                field.handleChange(Number(e.target.value || 0))
                               }
                               aria-invalid={isInvalid}
                               placeholder="Optional"
                             />
                             {isInvalid && (
-                              <FieldError
-                                errors={field.state.meta.errors}
-                              />
+                              <FieldError errors={field.state.meta.errors} />
                             )}
                           </Field>
                         );
@@ -222,9 +207,9 @@ export const AdvancedVariantsSection = withForm({
                                   unitName:
                                     availableUnits.find(
                                       (candidate) =>
-                                        candidate.id === unit.unitId
+                                        candidate.id === unit.unitId,
                                     )?.name ?? unit.unitId,
-                                }))
+                                })),
                               );
 
                               return (
@@ -243,9 +228,7 @@ export const AdvancedVariantsSection = withForm({
                                       type="button"
                                       variant="outline"
                                       size="sm"
-                                      onClick={() =>
-                                        onOpenUnitsDialog(index)
-                                      }
+                                      onClick={() => onOpenUnitsDialog(index)}
                                       disabled={!availableUnits.length}
                                     >
                                       Manage Units
@@ -253,8 +236,8 @@ export const AdvancedVariantsSection = withForm({
                                   </div>
                                   {!availableUnits.length && (
                                     <div className="text-sm text-muted-foreground">
-                                      Create shared units first from the
-                                      Units page.
+                                      Create shared units first from the Units
+                                      page.
                                     </div>
                                   )}
                                   {isInvalid && (
@@ -274,9 +257,7 @@ export const AdvancedVariantsSection = withForm({
                                 label="Unit"
                                 placeholder="Select unit"
                                 getValue={(value) =>
-                                  extractSingleUnitId(
-                                    value as FormUnitValue[]
-                                  )
+                                  extractSingleUnitId(value as FormUnitValue[])
                                 }
                                 setValue={(value) =>
                                   createSingleUnitArray(value)

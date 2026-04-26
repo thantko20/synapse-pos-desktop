@@ -7,12 +7,12 @@ export const { useAppForm, withFieldGroup, withForm } = createFormHook({
     TextField: lazy(() =>
       import("#/components/ui/text-field").then((mod) => ({
         default: mod.TextField,
-      }))
+      })),
     ),
     SelectField: lazy(() =>
       import("#/components/ui/select-field").then((mod) => ({
         default: mod.SelectField,
-      }))
+      })),
     ),
   },
   formComponents: {},

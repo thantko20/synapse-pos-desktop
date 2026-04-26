@@ -7,14 +7,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "#/components/ui/alert-dialog"
+} from "#/components/ui/alert-dialog";
 
 interface ArchiveDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  categoryName: string
-  onConfirm: () => void
-  isPending: boolean
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  categoryName: string;
+  onConfirm: () => void;
+  isPending: boolean;
 }
 
 export function ArchiveDialog({
@@ -30,7 +30,8 @@ export function ArchiveDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Archive Category</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to archive "{categoryName}"? This category will be hidden from active lists.
+            Are you sure you want to archive "{categoryName}"? This category
+            will be hidden from active lists.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -41,5 +42,5 @@ export function ArchiveDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

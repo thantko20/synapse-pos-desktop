@@ -39,7 +39,7 @@ function createEmptyVariant(): FormVariantValue {
 }
 
 function normalizeToSingleUnit(
-  units: ProductFormValues["variants"][number]["units"]
+  units: ProductFormValues["variants"][number]["units"],
 ): typeof units {
   const defaultUnit = units.find((u) => u.isDefault) ?? units[0];
   if (!defaultUnit) return [];
@@ -101,7 +101,7 @@ export function ProductForm({ productId }: ProductFormProps) {
   const [unitsDialogIndex, setUnitsDialogIndex] = useState<number | null>(null);
 
   const { data: categoriesResult } = useQuery(
-    categoryQueries.all({ pageSize: 100, includeArchived: false })
+    categoryQueries.all({ pageSize: 100, includeArchived: false }),
   );
   const { data: unitsResult } = useQuery(unitQueries.all());
   const { data: product, isLoading } = useQuery({
@@ -145,9 +145,9 @@ export function ProductForm({ productId }: ProductFormProps) {
                   })),
                   reorderPoint: v.reorderPoint,
                   alertThreshold: v.alertThreshold,
-                })
+                }),
             ),
-          })
+          }),
         );
         return;
       }
@@ -172,7 +172,7 @@ export function ProductForm({ productId }: ProductFormProps) {
             reorderPoint: v.reorderPoint,
             alertThreshold: v.alertThreshold,
           })),
-        })
+        }),
       );
     },
   });
@@ -201,7 +201,7 @@ export function ProductForm({ productId }: ProductFormProps) {
         const currentUnits = values.variants[index].units;
         form.setFieldValue(
           `variants[${index}].units`,
-          normalizeToSingleUnit(currentUnits)
+          normalizeToSingleUnit(currentUnits),
         );
       });
     }
@@ -319,7 +319,7 @@ export function ProductForm({ productId }: ProductFormProps) {
       </div>
 
       <form
-        id="product-form"
+        id={form.formId}
         onSubmit={(e) => {
           e.preventDefault();
           form.handleSubmit();
@@ -328,10 +328,7 @@ export function ProductForm({ productId }: ProductFormProps) {
       >
         <div className="rounded-2xl border bg-card p-6 shadow-sm">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <ProductDetailsSection
-              form={form}
-              categories={categoryOptions}
-            />
+            <ProductDetailsSection form={form} categories={categoryOptions} />
 
             <form.Subscribe
               selector={(state) => state.values.hasVariants}

@@ -1,7 +1,7 @@
-export { ProductList } from "./components/product-list"
-export { ProductForm } from "./components/product-form"
-export { productQueries } from "./queries"
-export { productApi } from "./api"
+export { ProductList } from "./components/product-list";
+export { ProductForm } from "./components/product-form";
+export { productQueries } from "./queries";
+export { productApi } from "./api";
 export type {
   Product,
   ProductVariant,
@@ -15,4 +15,4 @@ export type {
   UpdateProductInput,
   UpdateProductVariantInput,
   UpdateProductVariantUnitInput,
-} from "./types"
+} from "./types";

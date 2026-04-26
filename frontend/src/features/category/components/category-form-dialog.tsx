@@ -1,7 +1,7 @@
-import { useEffect } from "react"
-import { useForm } from "@tanstack/react-form"
+import { useEffect } from "react";
+import { useForm } from "@tanstack/react-form";
 
-import { Button } from "#/components/ui/button"
+import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,23 +9,23 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "#/components/ui/dialog"
+} from "#/components/ui/dialog";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "#/components/ui/field"
-import { Input } from "#/components/ui/input"
-import type { Category } from "../types"
-import { CategoryFormSchema } from "../schemas"
+} from "#/components/ui/field";
+import { Input } from "#/components/ui/input";
+import type { Category } from "../types";
+import { CategoryFormSchema } from "../schemas";
 
 interface CategoryFormDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  category?: Category | null
-  onSubmit: (data: { name: string; description: string }) => void
-  isPending: boolean
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  category?: Category | null;
+  onSubmit: (data: { name: string; description: string }) => void;
+  isPending: boolean;
 }
 
 export function CategoryFormDialog({
@@ -35,7 +35,7 @@ export function CategoryFormDialog({
   onSubmit,
   isPending,
 }: CategoryFormDialogProps) {
-  const isEditing = !!category
+  const isEditing = !!category;
 
   const form = useForm({
     defaultValues: {
@@ -46,33 +46,37 @@ export function CategoryFormDialog({
       onSubmit: CategoryFormSchema,
     },
     onSubmit: ({ value }) => {
-      onSubmit(value)
+      onSubmit(value);
     },
-  })
+  });
 
   useEffect(() => {
     if (open) {
       form.reset({
         name: category?.name ?? "",
         description: category?.description ?? "",
-      })
+      });
     }
-  }, [open, category])
+  }, [open, category]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Category" : "New Category"}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? "Edit Category" : "New Category"}
+          </DialogTitle>
           <DialogDescription>
-            {isEditing ? "Update the category details." : "Create a new category."}
+            {isEditing
+              ? "Update the category details."
+              : "Create a new category."}
           </DialogDescription>
         </DialogHeader>
         <form
           id="category-form"
           onSubmit={(e) => {
-            e.preventDefault()
-            form.handleSubmit()
+            e.preventDefault();
+            form.handleSubmit();
           }}
           className="flex flex-col gap-4"
         >
@@ -80,7 +84,8 @@ export function CategoryFormDialog({
             <form.Field
               name="name"
               children={(field) => {
-                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor="category-name">Name</FieldLabel>
@@ -93,18 +98,23 @@ export function CategoryFormDialog({
                       aria-invalid={isInvalid}
                       placeholder="Category name"
                     />
-                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
                   </Field>
-                )
+                );
               }}
             />
             <form.Field
               name="description"
               children={(field) => {
-                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
-                    <FieldLabel htmlFor="category-description">Description</FieldLabel>
+                    <FieldLabel htmlFor="category-description">
+                      Description
+                    </FieldLabel>
                     <Input
                       id="category-description"
                       name={field.name}
@@ -114,15 +124,21 @@ export function CategoryFormDialog({
                       aria-invalid={isInvalid}
                       placeholder="Optional description"
                     />
-                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
                   </Field>
-                )
+                );
               }}
             />
           </FieldGroup>
         </form>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button type="submit" form="category-form" disabled={isPending}>
@@ -131,5 +147,5 @@ export function CategoryFormDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

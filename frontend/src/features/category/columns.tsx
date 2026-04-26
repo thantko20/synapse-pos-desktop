@@ -1,6 +1,6 @@
-import type { ColumnDef } from "@tanstack/react-table"
-import type { Category } from "../types"
-import { Button } from "#/components/ui/button"
+import type { ColumnDef } from "@tanstack/react-table";
+import type { Category } from "../types";
+import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,12 +8,12 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu"
-import { ArrowUpDownIcon, MoreHorizontalIcon } from "lucide-react"
+} from "#/components/ui/dropdown-menu";
+import { ArrowUpDownIcon, MoreHorizontalIcon } from "lucide-react";
 
 interface ColumnContext {
-  onEdit: (category: Category) => void
-  onArchive: (category: Category) => void
+  onEdit: (category: Category) => void;
+  onArchive: (category: Category) => void;
 }
 
 export function getCategoryColumns(ctx: ColumnContext): ColumnDef<Category>[] {
@@ -43,7 +43,7 @@ export function getCategoryColumns(ctx: ColumnContext): ColumnDef<Category>[] {
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
-        const category = row.original
+        const category = row.original;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -69,8 +69,8 @@ export function getCategoryColumns(ctx: ColumnContext): ColumnDef<Category>[] {
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
-        )
+        );
       },
     },
-  ]
+  ];
 }
