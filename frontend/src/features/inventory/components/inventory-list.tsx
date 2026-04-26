@@ -1,22 +1,13 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  flexRender,
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
   type SortingState,
 } from "@tanstack/react-table";
 
-import { Button } from "#/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "#/components/ui/table";
+import { DataTable } from "#/components/data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { inventoryQueries } from "../queries";
 import { getLowStockColumns } from "../low-stock-columns";
@@ -95,85 +86,18 @@ export function InventoryList() {
         </TabsList>
 
         <TabsContent value="low-stock">
-          {lowStockLoading ? (
-            <div className="text-sm text-muted-foreground">
-              Loading low stock items...
-            </div>
-          ) : (
-            <div className="overflow-hidden rounded-xl border bg-card">
-              <Table>
-                <TableHeader>
-                  {lowStockTable.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {lowStockTable.getRowModel().rows.length ? (
-                    lowStockTable.getRowModel().rows.map((row) => (
-                      <TableRow
-                        key={row.id}
-                        className="cursor-pointer"
-                        onClick={() => handleViewMovements(row.original)}
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={lowStockColumns.length}
-                        className="h-24 text-center"
-                      >
-                        No low stock items.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between rounded-xl border bg-card px-4 py-3 mt-3">
-            <div className="text-xs text-muted-foreground">
-              Showing page {lowStockResult?.page ?? 1} of {lowStockTotalPages}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setLowStockPage((v) => v - 1)}
-                disabled={lowStockPage <= 1}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setLowStockPage((v) => v + 1)}
-                disabled={lowStockPage >= lowStockTotalPages}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+          <DataTable
+            table={lowStockTable}
+            isLoading={lowStockLoading}
+            loadingText="Loading low stock items..."
+            emptyText="No low stock items."
+            onRowClick={(row) => handleViewMovements(row)}
+            pagination={{
+              page: lowStockResult?.page ?? 1,
+              totalPages: lowStockTotalPages,
+              onPageChange: setLowStockPage,
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="movements">
@@ -195,83 +119,18 @@ export function InventoryList() {
               Select a variant from the Low Stock tab to view its movement
               history.
             </div>
-          ) : movementsLoading ? (
-            <div className="text-sm text-muted-foreground">
-              Loading movements...
-            </div>
           ) : (
-            <>
-              <div className="overflow-hidden rounded-xl border bg-card">
-                <Table>
-                  <TableHeader>
-                    {movementTable.getHeaderGroups().map((headerGroup) => (
-                      <TableRow key={headerGroup.id}>
-                        {headerGroup.headers.map((header) => (
-                          <TableHead key={header.id}>
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext(),
-                                )}
-                          </TableHead>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableHeader>
-                  <TableBody>
-                    {movementTable.getRowModel().rows.length ? (
-                      movementTable.getRowModel().rows.map((row) => (
-                        <TableRow key={row.id}>
-                          {row.getVisibleCells().map((cell) => (
-                            <TableCell key={cell.id}>
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext(),
-                              )}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell
-                          colSpan={movementColumns.length}
-                          className="h-24 text-center"
-                        >
-                          No movements recorded.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-
-              <div className="flex items-center justify-between rounded-xl border bg-card px-4 py-3 mt-3">
-                <div className="text-xs text-muted-foreground">
-                  Showing page {movementsResult?.page ?? 1} of{" "}
-                  {movementTotalPages}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setMovementPage((v) => v - 1)}
-                    disabled={movementPage <= 1}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setMovementPage((v) => v + 1)}
-                    disabled={movementPage >= movementTotalPages}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            </>
+            <DataTable
+              table={movementTable}
+              isLoading={movementsLoading}
+              loadingText="Loading movements..."
+              emptyText="No movements recorded."
+              pagination={{
+                page: movementsResult?.page ?? 1,
+                totalPages: movementTotalPages,
+                onPageChange: setMovementPage,
+              }}
+            />
           )}
         </TabsContent>
       </Tabs>
